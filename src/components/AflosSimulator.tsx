@@ -438,7 +438,7 @@ export function AflosSimulator() {
     const ownBreak = aflosOnOwnBreak ? aflosIds : [];
 
     const inOtherLinesWindow =
-      t >= OTHER_LINES_START_MINUTE && t < OTHER_LINES_END_MINUTE;
+      currentT >= OTHER_LINES_START_MINUTE && currentT < OTHER_LINES_END_MINUTE;
 
     // Any aflos not assigned to E or D can help other lines:
     // - during the dedicated "andere lijnen" window (min 120-190)
@@ -471,7 +471,7 @@ export function AflosSimulator() {
     maxAflosAvailable,
     perLane.D.breakCount,
     perLane.E.breakCount,
-    t,
+    currentT,
   ]);
 
   return (
