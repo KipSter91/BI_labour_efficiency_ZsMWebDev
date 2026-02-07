@@ -8,7 +8,6 @@ import { AnimatePresence, motion } from "framer-motion";
 const links = [
   { id: "intro", label: "Intro" },
   { id: "blauwprint", label: "Blauwprint" },
-  { id: "huidig", label: "Huidige" },
   { id: "planning", label: "Planning" },
   { id: "calculator", label: "Calculator" },
   { id: "pause-aflos", label: "Pause aflos" },

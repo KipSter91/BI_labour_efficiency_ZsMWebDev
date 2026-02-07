@@ -9,10 +9,10 @@ import { cn } from "@/lib/ui";
  * INPAKLIJN (inpak + operator):
  * A: inpak 2 + operator 1 = 3
  * B mini: inpak 2 + operator 1 = 3
- * B normaal: inpak 6 + operator 1 = 7
+ * B normaal: inpak 4 + operator 1 = 5
  * C: inpak 2 + operator 1 = 3
- * D: inpak 3 + operator 1 = 4
- * E: inpak 7 + operator 1 = 8
+ * D: inpak 2 + operator 1 = 3
+ * E: inpak 4 + operator 1 = 5
  *
  * BAKLIJN (bakoperator per lijn):
  * A: 1 bakoperator
@@ -35,16 +35,7 @@ type State = {
 
   // Planning scenarios (inpaklijn)
   lijnA_8stuks: boolean; // +1 FTE inpak
-  lijnB_duoMeli: boolean; // +1 FTE inpak (alleen bij normal)
-  lijnE_bio: boolean; // +1 FTE inpak
-
-  // Technische issues - INPAKLIJN
-  techD_casepacker: boolean; // +1 FTE op inpaklijn D
-
-  // Technische issues - BAKLIJN
-  techD_opvoerband: boolean; // +1 FTE op baklijn D
-  techD_kruimelband: boolean; // +1 FTE op baklijn D
-  techE_sync: boolean; // +1 FTE op baklijn E
+  lijnE_tray: boolean; // +1 FTE inpak (working with tray)
 };
 
 function Toggle({
@@ -126,14 +117,7 @@ export function CalculatorPanel() {
 
     // Planning: standaard geen speciale scenarios
     lijnA_8stuks: false,
-    lijnB_duoMeli: false,
-    lijnE_bio: false,
-
-    // Tech issues: default allemaal actief (huidige situatie)
-    techD_casepacker: true,
-    techD_opvoerband: true,
-    techD_kruimelband: true,
-    techE_sync: true,
+    lijnE_tray: false,
   });
 
   // === INPAKLIJN berekeningen (alleen inpak + operator, GEEN bakoperator) ===
@@ -149,9 +133,8 @@ export function CalculatorPanel() {
     if (state.lijnBType === "mini") {
       return { base: 3, planning: 0, tech: 0, total: 3 }; // mini: inpak 2 + operator 1
     }
-    const base = 7; // normaal: inpak 6 + operator 1
-    const planning = state.lijnB_duoMeli ? 1 : 0;
-    return { base, planning, tech: 0, total: base + planning };
+    const base = 5; // normaal: inpak 4 + operator 1
+    return { base, planning: 0, tech: 0, total: base };
   };
 
   const calcInpakC = () => {
@@ -161,19 +144,18 @@ export function CalculatorPanel() {
 
   const calcInpakD = () => {
     if (!state.lijnD) return { base: 0, planning: 0, tech: 0, total: 0 };
-    const base = 4; // inpak 3 + operator 1
-    const tech = state.techD_casepacker ? 1 : 0; // casepacker issue → +1 op inpak
-    return { base, planning: 0, tech, total: base + tech };
+    const base = 3; // inpak 2 + operator 1
+    return { base, planning: 0, tech: 0, total: base };
   };
 
   const calcInpakE = () => {
     if (!state.lijnE) return { base: 0, planning: 0, tech: 0, total: 0 };
-    const base = 8; // inpak 7 + operator 1
-    const planning = state.lijnE_bio ? 1 : 0;
+    const base = 5; // inpak 4 + operator 1
+    const planning = state.lijnE_tray ? 1 : 0;
     return { base, planning, tech: 0, total: base + planning };
   };
 
-  // === BAKLIJN berekeningen (bakoperator per lijn + tech issues) ===
+  // === BAKLIJN berekeningen (bakoperator per lijn) ===
   const calcBaklijnA = () => {
     if (!state.lijnA) return { base: 0, tech: 0, total: 0 };
     return { base: 1, tech: 0, total: 1 }; // 1 bakoperator
@@ -192,17 +174,13 @@ export function CalculatorPanel() {
   const calcBaklijnD = () => {
     if (!state.lijnD) return { base: 0, tech: 0, total: 0 };
     const base = 2; // 2 bakoperator
-    let tech = 0;
-    if (state.techD_opvoerband) tech += 1;
-    if (state.techD_kruimelband) tech += 1;
-    return { base, tech, total: base + tech };
+    return { base, tech: 0, total: base };
   };
 
   const calcBaklijnE = () => {
     if (!state.lijnE) return { base: 0, tech: 0, total: 0 };
     const base = 2; // 2 bakoperator
-    const tech = state.techE_sync ? 1 : 0;
-    return { base, tech, total: base + tech };
+    return { base, tech: 0, total: base };
   };
 
   // Resultaten
@@ -226,7 +204,6 @@ export function CalculatorPanel() {
       inpakC.planning +
       inpakD.planning +
       inpakE.planning,
-    tech: inpakA.tech + inpakB.tech + inpakC.tech + inpakD.tech + inpakE.tech,
     total:
       inpakA.total + inpakB.total + inpakC.total + inpakD.total + inpakE.total,
   };
@@ -238,12 +215,6 @@ export function CalculatorPanel() {
       baklijnC.base +
       baklijnD.base +
       baklijnE.base,
-    tech:
-      baklijnA.tech +
-      baklijnB.tech +
-      baklijnC.tech +
-      baklijnD.tech +
-      baklijnE.tech,
     total:
       baklijnA.total +
       baklijnB.total +
@@ -257,7 +228,7 @@ export function CalculatorPanel() {
   // Line data for table display - with extras info
   const linesTableData = [
     {
-      line: "Inpak Lijn A",
+      line: "Lijn A",
       active: state.lijnA,
       inpak: state.lijnA ? 2 + (state.lijnA_8stuks ? 1 : 0) : 0,
       inpakBase: 2,
@@ -272,18 +243,13 @@ export function CalculatorPanel() {
     {
       line:
         state.lijnBType === "mini"
-          ? "Inpak Lijn B (mini)"
-          : "Inpak Lijn B (normaal)",
+          ? "Lijn B (mini)"
+          : "Lijn B (normaal)",
       active: state.lijnB,
-      inpak: state.lijnB
-        ? state.lijnBType === "mini"
-          ? 2
-          : 6 + (state.lijnB_duoMeli ? 1 : 0)
-        : 0,
-      inpakBase: state.lijnBType === "mini" ? 2 : 6,
-      inpakExtra: state.lijnBType === "normal" && state.lijnB_duoMeli ? 1 : 0,
-      inpakExtraLabel:
-        state.lijnBType === "normal" && state.lijnB_duoMeli ? "duo" : null,
+      inpak: state.lijnB ? (state.lijnBType === "mini" ? 2 : 4) : 0,
+      inpakBase: state.lijnBType === "mini" ? 2 : 4,
+      inpakExtra: 0,
+      inpakExtraLabel: null as string | null,
       operator: state.lijnB ? 1 : 0,
       bakoperator: state.lijnB ? 2 : 0,
       bakoperatorBase: 2,
@@ -291,7 +257,7 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: "Inpak Lijn C",
+      line: "Lijn C",
       active: state.lijnC,
       inpak: state.lijnC ? 2 : 0,
       inpakBase: 2,
@@ -304,41 +270,30 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: "Inpak Lijn D",
+      line: "Lijn D",
       active: state.lijnD,
-      inpak: state.lijnD ? 3 + (state.techD_casepacker ? 1 : 0) : 0,
-      inpakBase: 3,
-      inpakExtra: state.techD_casepacker ? 1 : 0,
-      inpakExtraLabel: state.techD_casepacker ? "case" : null,
+      inpak: state.lijnD ? 2 : 0,
+      inpakBase: 2,
+      inpakExtra: 0,
+      inpakExtraLabel: null as string | null,
       operator: state.lijnD ? 1 : 0,
-      bakoperator: state.lijnD
-        ? 2 +
-          (state.techD_opvoerband ? 1 : 0) +
-          (state.techD_kruimelband ? 1 : 0)
-        : 0,
+      bakoperator: state.lijnD ? 2 : 0,
       bakoperatorBase: 2,
-      bakoperatorExtra:
-        (state.techD_opvoerband ? 1 : 0) + (state.techD_kruimelband ? 1 : 0),
-      bakoperatorExtraLabel:
-        [
-          state.techD_opvoerband ? "opv" : null,
-          state.techD_kruimelband ? "krm" : null,
-        ]
-          .filter(Boolean)
-          .join("+") || null,
+      bakoperatorExtra: 0,
+      bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: "Inpak Lijn E",
+      line: "Lijn E",
       active: state.lijnE,
-      inpak: state.lijnE ? 7 + (state.lijnE_bio ? 1 : 0) : 0,
-      inpakBase: 7,
-      inpakExtra: state.lijnE_bio ? 1 : 0,
-      inpakExtraLabel: state.lijnE_bio ? "bio" : null,
+      inpak: state.lijnE ? 4 + (state.lijnE_tray ? 1 : 0) : 0,
+      inpakBase: 4,
+      inpakExtra: state.lijnE_tray ? 1 : 0,
+      inpakExtraLabel: state.lijnE_tray ? "tray" : null,
       operator: state.lijnE ? 1 : 0,
-      bakoperator: state.lijnE ? 2 + (state.techE_sync ? 1 : 0) : 0,
+      bakoperator: state.lijnE ? 2 : 0,
       bakoperatorBase: 2,
-      bakoperatorExtra: state.techE_sync ? 1 : 0,
-      bakoperatorExtraLabel: state.techE_sync ? "sync" : null,
+      bakoperatorExtra: 0,
+      bakoperatorExtraLabel: null as string | null,
     },
   ].filter((row) => row.active);
 
@@ -350,8 +305,8 @@ export function CalculatorPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Compact 3-column grid - stacks on mobile */}
-      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Compact grid - stacks on mobile */}
+      <div className="grid gap-3 sm:gap-4">
         {/* Column 1: Lijn selectie */}
         <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-brand-navy mb-3">
@@ -420,7 +375,6 @@ export function CalculatorPanel() {
                           setState((s) => ({
                             ...s,
                             lijnBType: "normal",
-                            lijnB_duoMeli: false,
                           }))
                         }
                         className="h-3 w-3 accent-brand-gold"
@@ -436,7 +390,6 @@ export function CalculatorPanel() {
                           setState((s) => ({
                             ...s,
                             lijnBType: "mini",
-                            lijnB_duoMeli: false,
                           }))
                         }
                         className="h-3 w-3 accent-brand-gold"
@@ -446,22 +399,6 @@ export function CalculatorPanel() {
                   </div>
                 )}
               </div>
-              {state.lijnB && state.lijnBType === "normal" && (
-                <label className="flex items-center gap-1.5 text-xs cursor-pointer mt-2 pl-12">
-                  <input
-                    type="checkbox"
-                    checked={state.lijnB_duoMeli}
-                    onChange={(e) =>
-                      setState((s) => ({
-                        ...s,
-                        lijnB_duoMeli: e.target.checked,
-                      }))
-                    }
-                    className="h-3.5 w-3.5 accent-brand-gold"
-                  />
-                  <span className="text-neutral-600">Duo Meli +1</span>
-                </label>
-              )}
             </div>
 
             {/* Lijn C */}
@@ -497,9 +434,6 @@ export function CalculatorPanel() {
                 badge={
                   state.lijnD ? `${inpakD.total + baklijnD.total}` : undefined
                 }
-                badgeColor={
-                  inpakD.tech > 0 || baklijnD.tech > 0 ? "rose" : "amber"
-                }
               />
             </div>
 
@@ -519,19 +453,18 @@ export function CalculatorPanel() {
                   badge={
                     state.lijnE ? `${inpakE.total + baklijnE.total}` : undefined
                   }
-                  badgeColor={baklijnE.tech > 0 ? "rose" : "amber"}
                 />
                 {state.lijnE && (
                   <label className="flex items-center gap-1.5 text-xs cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={state.lijnE_bio}
+                      checked={state.lijnE_tray}
                       onChange={(e) =>
-                        setState((s) => ({ ...s, lijnE_bio: e.target.checked }))
+                        setState((s) => ({ ...s, lijnE_tray: e.target.checked }))
                       }
                       className="h-3.5 w-3.5 accent-brand-gold"
                     />
-                    <span className="text-neutral-600">BIO</span>
+                    <span className="text-neutral-600">Tray +1</span>
                   </label>
                 )}
               </div>
@@ -539,85 +472,6 @@ export function CalculatorPanel() {
           </div>
         </div>
 
-        {/* Column 2: Tech issues Inpaklijn */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-brand-navy mb-3">
-            Tech issues — Inpak
-          </h3>
-          <div className="space-y-2">
-            <div className="rounded-lg bg-neutral-50 px-3 py-2">
-              <Toggle
-                checked={state.techD_casepacker}
-                onChange={(v) =>
-                  setState((s) => ({ ...s, techD_casepacker: v }))
-                }
-                label="Casepacker (D)"
-                badge="+1"
-                badgeColor="rose"
-                disabled={!state.lijnD}
-              />
-            </div>
-          </div>
-          {inpakTotals.tech > 0 && (
-            <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 flex justify-between items-center">
-              <span className="text-xs font-medium text-rose-700">Impact</span>
-              <span className="text-sm font-bold text-rose-700">
-                +{inpakTotals.tech} FTE
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Column 3: Tech issues Baklijn */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-brand-navy mb-3">
-            Tech issues — Baklijn
-          </h3>
-          <div className="space-y-2">
-            <div className="rounded-lg bg-neutral-50 px-3 py-2">
-              <Toggle
-                checked={state.techD_opvoerband}
-                onChange={(v) =>
-                  setState((s) => ({ ...s, techD_opvoerband: v }))
-                }
-                label="Opvoerband (D)"
-                badge="+1"
-                badgeColor="rose"
-                disabled={!state.lijnD}
-              />
-            </div>
-            <div className="rounded-lg bg-neutral-50 px-3 py-2">
-              <Toggle
-                checked={state.techD_kruimelband}
-                onChange={(v) =>
-                  setState((s) => ({ ...s, techD_kruimelband: v }))
-                }
-                label="Kruimelband (D)"
-                badge="+1"
-                badgeColor="rose"
-                disabled={!state.lijnD}
-              />
-            </div>
-            <div className="rounded-lg bg-neutral-50 px-3 py-2">
-              <Toggle
-                checked={state.techE_sync}
-                onChange={(v) => setState((s) => ({ ...s, techE_sync: v }))}
-                label="Sync probleem (E)"
-                badge="+1"
-                badgeColor="rose"
-                disabled={!state.lijnE}
-              />
-            </div>
-          </div>
-          {baklijnTotals.tech > 0 && (
-            <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 flex justify-between items-center">
-              <span className="text-xs font-medium text-rose-700">Impact</span>
-              <span className="text-sm font-bold text-rose-700">
-                +{baklijnTotals.tech} FTE
-              </span>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Compact Summary Table */}
@@ -627,14 +481,17 @@ export function CalculatorPanel() {
             <thead className="bg-brand-gold/10 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-3 sm:px-4 py-2">Lijn</th>
-                <th className="px-3 sm:px-4 py-2">Inpak</th>
-                <th className="px-3 sm:px-4 py-2">
-                  <span className="sm:hidden">Op.</span>
-                  <span className="hidden sm:inline">Operator</span>
-                </th>
                 <th className="px-3 sm:px-4 py-2">
                   <span className="sm:hidden">Bak.</span>
                   <span className="hidden sm:inline">Bakoperator</span>
+                </th>
+                <th className="px-3 sm:px-4 py-2">
+                  <span className="sm:hidden">Op.</span>
+                  <span className="hidden sm:inline">Inpakoperator</span>
+                </th>
+                <th className="px-3 sm:px-4 py-2">
+                  <span className="sm:hidden">Inp.</span>
+                  <span className="hidden sm:inline">Inpakassistent</span>
                 </th>
                 <th className="px-3 sm:px-4 py-2">
                   <span className="sm:hidden">Tot.</span>
@@ -645,7 +502,7 @@ export function CalculatorPanel() {
             <tbody className="divide-y divide-brand-gold/20">
               {linesTableData.map((row) => {
                 const shortName = row.line
-                  .replace("Inpak Lijn ", "")
+                  .replace("Lijn ", "")
                   .replace(" (mini)", " M")
                   .replace(" (normaal)", " N");
 
@@ -658,19 +515,19 @@ export function CalculatorPanel() {
                       <span className="hidden sm:inline">{row.line}</span>
                     </td>
                     <td className="px-3 sm:px-4 py-2">
-                      {row.inpak}
-                      {row.inpakExtraLabel && (
+                      {row.bakoperator}
+                      {row.bakoperatorExtraLabel && (
                         <span className="text-brand-gold ml-1 text-[10px] sm:text-xs">
-                          (+{row.inpakExtra} {row.inpakExtraLabel})
+                          (+{row.bakoperatorExtra} {row.bakoperatorExtraLabel})
                         </span>
                       )}
                     </td>
                     <td className="px-3 sm:px-4 py-2">{row.operator}</td>
                     <td className="px-3 sm:px-4 py-2">
-                      {row.bakoperator}
-                      {row.bakoperatorExtraLabel && (
+                      {row.inpak}
+                      {row.inpakExtraLabel && (
                         <span className="text-brand-gold ml-1 text-[10px] sm:text-xs">
-                          (+{row.bakoperatorExtra} {row.bakoperatorExtraLabel})
+                          (+{row.inpakExtra} {row.inpakExtraLabel})
                         </span>
                       )}
                     </td>
@@ -690,13 +547,13 @@ export function CalculatorPanel() {
                   </span>
                 </td>
                 <td className="px-3 sm:px-4 py-2 sm:py-3 font-semibold text-neutral-700">
-                  {tableSubtotals.inpak}
+                  {tableSubtotals.bakoperator}
                 </td>
                 <td className="px-3 sm:px-4 py-2 sm:py-3 font-semibold text-neutral-700">
                   {tableSubtotals.operator}
                 </td>
                 <td className="px-3 sm:px-4 py-2 sm:py-3 font-semibold text-neutral-700">
-                  {tableSubtotals.bakoperator}
+                  {tableSubtotals.inpak}
                 </td>
                 <td className="px-3 sm:px-4 py-2 sm:py-3 font-bold text-brand-navy text-lg sm:text-xl">
                   {grandTotal}

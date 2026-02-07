@@ -6,24 +6,24 @@ import { useState } from "react";
 // NB: Er draaien altijd 5 lijnen (A, B, C, D, E).
 // Lijn B is OF mini OF normaal - nooit beide tegelijk.
 const inpakLinesData = [
-  { line: "Inpak Lijn A", key: "A", inpak: 2, operator: 1, bakoperator: 1 },
+  { line: "Lijn A", key: "A", inpak: 2, operator: 1, bakoperator: 1 },
   {
-    line: "Inpak Lijn B (mini)",
+    line: "Lijn B (mini)",
     key: "B-mini",
     inpak: 2,
     operator: 1,
     bakoperator: 2,
   },
   {
-    line: "Inpak Lijn B (normaal)",
+    line: "Lijn B (normaal)",
     key: "B-normaal",
-    inpak: 6,
+    inpak: 4,
     operator: 1,
     bakoperator: 2,
   },
-  { line: "Inpak Lijn C", key: "C", inpak: 2, operator: 1, bakoperator: 1 },
-  { line: "Inpak Lijn D", key: "D", inpak: 3, operator: 1, bakoperator: 2 },
-  { line: "Inpak Lijn E", key: "E", inpak: 7, operator: 1, bakoperator: 2 },
+  { line: "Lijn C", key: "C", inpak: 2, operator: 1, bakoperator: 1 },
+  { line: "Lijn D", key: "D", inpak: 2, operator: 1, bakoperator: 2 },
+  { line: "Lijn E", key: "E", inpak: 4, operator: 1, bakoperator: 2 },
 ];
 
 // Computed with totals
@@ -37,7 +37,10 @@ const otherRoles = [
   { functie: "Deegbereiding", fte: 3 },
   { functie: "Stroopbereiding", fte: 2 },
   { functie: "Kruimelaar", fte: 1 },
-  { functie: "Cleaning", fte: 1 },
+  { functie: "Schoonmaak", fte: 1 },
+  { functie: "TD (Technische dienst)", fte: 2 },
+  { functie: "Reserve", fte: 3 },
+  { functie: "Aflosser (4 uur)", fte: 3 },
 ] as const;
 
 const otherTotal = otherRoles.reduce((sum, row) => sum + row.fte, 0);
@@ -82,7 +85,7 @@ export function BlueprintTables() {
     <div className="grid gap-4 sm:gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <Table
-          title="Inpak lijnen (5 actief)"
+          title="Lijnen"
           headerRight={
             <div className="flex items-center gap-2">
               <label
@@ -104,10 +107,22 @@ export function BlueprintTables() {
             <thead className="bg-brand-gold/10 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-2 sm:px-5 py-2 sm:py-3">Lijn</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3">Inpak</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3">Op.</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3">Bak.</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3">Tot.</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3">
+                  <span className="sm:hidden">Bak.</span>
+                  <span className="hidden sm:inline">Bakoperator</span>
+                </th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3">
+                  <span className="sm:hidden">Op.</span>
+                  <span className="hidden sm:inline">Inpakoperator</span>
+                </th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3">
+                  <span className="sm:hidden">Inp.</span>
+                  <span className="hidden sm:inline">Inpakassistent</span>
+                </th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3">
+                  <span className="sm:hidden">Tot.</span>
+                  <span className="hidden sm:inline">Totaal</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-gold/20">
@@ -115,7 +130,7 @@ export function BlueprintTables() {
                 const isBLine = row.key.startsWith("B-");
                 // Shorten line names on mobile
                 const shortName = row.line
-                  .replace("Inpak Lijn ", "")
+                  .replace("Lijn ", "")
                   .replace(" (mini)", " M")
                   .replace(" (normaal)", " N");
 
@@ -129,13 +144,13 @@ export function BlueprintTables() {
                       <span className="sm:hidden">{shortName}</span>
                       <span className="hidden sm:inline">{row.line}</span>
                     </td>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3">{row.inpak}</td>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3">
-                      {row.operator}
-                    </td>
                     <td className="px-2 sm:px-5 py-2 sm:py-3">
                       {row.bakoperator}
                     </td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3">
+                      {row.operator}
+                    </td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3">{row.inpak}</td>
                     <td className="px-2 sm:px-5 py-2 sm:py-3 font-semibold text-brand-gold">
                       {row.totaal}
                     </td>
@@ -148,13 +163,13 @@ export function BlueprintTables() {
                   <span className="hidden sm:inline">Subtotaal inpak</span>
                 </td>
                 <td className="px-2 sm:px-5 py-2 sm:py-3 font-semibold text-neutral-700">
-                  {activeLines.reduce((s, r) => s + r.inpak, 0)}
+                  {activeLines.reduce((s, r) => s + r.bakoperator, 0)}
                 </td>
                 <td className="px-2 sm:px-5 py-2 sm:py-3 font-semibold text-neutral-700">
                   {activeLines.reduce((s, r) => s + r.operator, 0)}
                 </td>
                 <td className="px-2 sm:px-5 py-2 sm:py-3 font-semibold text-neutral-700">
-                  {activeLines.reduce((s, r) => s + r.bakoperator, 0)}
+                  {activeLines.reduce((s, r) => s + r.inpak, 0)}
                 </td>
                 <td className="px-2 sm:px-5 py-2 sm:py-3 font-bold text-brand-navy">
                   {inpakTotal}

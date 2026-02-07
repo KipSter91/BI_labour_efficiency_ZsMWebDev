@@ -25,52 +25,8 @@ export default function Home() {
         </Section>
 
         <Section
-          id="huidig"
-          eyebrow="2. Huidige omstandigheden"
-          title="Technische condities"
-          description="De blauwprint gaat uit van optimale omstandigheden. In de praktijk vragen technische beperkingen tijdelijk extra FTE."
-          variant="navy">
-          <InfoCards
-            items={[
-              {
-                lijn: "Lijn D",
-                title: "Inpak — Casepacker",
-                subtitle: "Niet volledig inzetbaar",
-                description:
-                  "Zolang de Casepacker niet bij elke werkopdracht inzetbaar is, zijn minimaal 5 medewerkers nodig. Zodra de Casepacker volledig operationeel is, kan de lijn met 4 FTE draaien.",
-                impact: "+1 FTE",
-              },
-              {
-                lijn: "Lijn D",
-                title: "Baklijn — Opvoerband & Kruimelband",
-                subtitle: "Twee technische issues",
-                description:
-                  "De opvoerband functioneert niet optimaal (+1 FTE). Daarnaast ontbreekt de kruimelband nog (+1 FTE). Samen vragen deze issues extra capaciteit.",
-                impact: "+2 FTE",
-              },
-              {
-                lijn: "Lijn E",
-                title: "Baklijn — Synchronisatie",
-                subtitle: "Timing probleem",
-                description:
-                  "Door een synchronisatieprobleem in de baklijn is tijdelijk extra ondersteuning nodig totdat dit technisch is opgelost.",
-                impact: "+1 FTE",
-              },
-              {
-                title: "Totale technische impact",
-                subtitle: "Bij oplossing → structurele besparing",
-                description:
-                  "Als alle technische condities zijn verbeterd, kan de FTE-bezetting structureel met 4 FTE omlaag. Deze onderbouwing helpt bij investeringsbeslissingen.",
-                impact: "+4 FTE totaal",
-                variant: "summary",
-              },
-            ]}
-          />
-        </Section>
-
-        <Section
           id="planning"
-          eyebrow="3. Planning omstandigheden"
+          eyebrow="2. Planning omstandigheden"
           title="Planningsregels"
           description="Bepaalde werkopdrachten vragen extra of minder capaciteit. Overzicht per inpaklijn."
           variant="gold">
@@ -86,14 +42,6 @@ export default function Home() {
               },
               {
                 lijn: "Lijn B",
-                title: "Duo order (Meli) met sealer",
-                subtitle: "Extra capaciteit nodig • Geen pauze-aflos",
-                description:
-                  "Bij duo orders waarbij de sealer machine 2 dozen aan elkaar koppelt, zijn 8 medewerkers nodig in plaats van 7.",
-                impact: "+1 FTE",
-              },
-              {
-                lijn: "Lijn B",
                 title: "Mini productie",
                 subtitle: "Minder capaciteit nodig • Geen pauze-aflos",
                 description:
@@ -102,10 +50,10 @@ export default function Home() {
               },
               {
                 lijn: "Lijn E",
-                title: "BIO productie",
+                title: "Working with tray",
                 subtitle: "Extra capaciteit nodig • Ombouw specifiek",
                 description:
-                  "Bij BIO producties vragen de machines die hiervoor worden ingezet 1 extra medewerker. Reguliere productie = 8 FTE, BIO = 9 FTE.",
+                  "Bij werken met tray is 1 extra medewerker nodig. Reguliere productie = 5 FTE, met tray = 6 FTE.",
                 impact: "+1 FTE",
               },
             ]}
@@ -114,16 +62,16 @@ export default function Home() {
 
         <Section
           id="calculator"
-          eyebrow="4. FTE Calculator"
+          eyebrow="3. FTE Calculator"
           title="Scenario berekening"
-          description="Selecteer actieve lijnen, toggle planning condities en technische issues. Direct inzicht in FTE impact per scenario."
+          description="Selecteer actieve lijnen en planning condities. Direct inzicht in FTE impact per scenario."
           variant="cream">
           <CalculatorPanel />
         </Section>
 
         <Section
           id="pause-aflos"
-          eyebrow="5. Pauze-aflos systeem"
+          eyebrow="4. Pauze-aflos systeem"
           title="Aflos simulatie"
           description="Interactieve simulatie voor Lijn D & E. 3 aflos medewerkers, 4 uur aanwezig, 30 min eigen pauze."
           variant="white">

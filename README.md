@@ -99,7 +99,7 @@ src/
 │   ├── BlueprintTables.tsx  # Staffing blueprint display
 │   ├── AflosSimulator.tsx   # Break relief simulator
 │   ├── CalculatorPanel.tsx  # FTE calculator
-│   ├── InfoCards.tsx   # Technical conditions cards
+│   ├── InfoCards.tsx   # Planning conditions cards
 │   ├── Section.tsx     # Reusable section wrapper
 │   └── Footer.tsx      # Site footer
 ├── data/
@@ -117,9 +117,9 @@ src/
 | ------------------------------------------------- | --------------------------------------------------- |
 | Interactive staffing overview with line selection | Scenario-based planning with real-time calculations |
 
-| Pause-Aflos Simulator        | Technical Conditions         |
+| Pause-Aflos Simulator        | Planning Conditions          |
 | ---------------------------- | ---------------------------- |
-| Visual break relief timeline | Current issues affecting FTE |
+| Visual break relief timeline | Planning scenarios affecting FTE |
 
 ---
 

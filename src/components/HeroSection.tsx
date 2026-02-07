@@ -9,11 +9,6 @@ const cards = [
     description: "Bezetting 2026 per lijn.",
   },
   {
-    id: "huidig",
-    title: "Huidige condities",
-    description: "Technische deviaties.",
-  },
-  {
     id: "planning",
     title: "Planningsregels",
     description: "Wanneer FTE wijzigt.",
@@ -56,8 +51,8 @@ export function HeroSection() {
           </h1>
 
           <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-neutral-600 px-4 sm:px-0">
-            Blauwprint ≠ realiteit: FTE beweegt mee met planningcondities,
-            technische condities en pause-aflos coverage.
+            Blauwprint ≠ realiteit: FTE beweegt mee met planningcondities en
+            pause-aflos coverage.
           </p>
 
           {/* CTA Button */}
@@ -92,7 +87,7 @@ export function HeroSection() {
           <p className="mb-3 sm:mb-4 text-center text-xs font-bold uppercase tracking-widest text-neutral-400">
             Navigeer door de presentatie
           </p>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
             {cards.map((c, idx) => (
               <motion.button
                 key={c.id}

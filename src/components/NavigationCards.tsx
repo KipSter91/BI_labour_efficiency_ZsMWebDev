@@ -14,11 +14,6 @@ const cards = [
     description: "Data-driven simulatie met timeline controls (Lijn D & E).",
   },
   {
-    id: "huidig",
-    title: "Huidige omstandigheden",
-    description: "Real workfloor deviations die FTE beïnvloeden.",
-  },
-  {
     id: "planning",
     title: "Planning omstandigheden",
     description: "Planning rules die bepalen wanneer FTE kan zakken.",
