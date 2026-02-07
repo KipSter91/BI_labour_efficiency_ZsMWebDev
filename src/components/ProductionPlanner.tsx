@@ -174,7 +174,7 @@ export function ProductionPlanner() {
   const nextWeek = useMemo(() => getNextWeekInfo(), []);
   const [expandedDays, setExpandedDays] = useState<Record<Day, boolean>>(() =>
     DAYS.reduce(
-      (acc, day) => ({ ...acc, [day]: true }),
+      (acc, day) => ({ ...acc, [day]: false }),
       {} as Record<Day, boolean>,
     ),
   );
