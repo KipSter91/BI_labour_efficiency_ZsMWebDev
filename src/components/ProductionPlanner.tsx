@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useLanguage } from "./LanguageProvider";
 
 type Day = "Maandag" | "Dinsdag" | "Woensdag" | "Donderdag" | "Vrijdag";
 type Shift = "Ochtend" | "Middag" | "Nacht";
@@ -28,11 +29,6 @@ type PlannerSettings = Record<Day, Record<Shift, ShiftSettings>>;
 const DAYS: Day[] = ["Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag"];
 const SHIFTS: Shift[] = ["Ochtend", "Middag", "Nacht"];
 const LINES: LineKey[] = ["A", "B", "C", "D", "E"];
-const ROLES: Array<{ key: RoleKey; label: string }> = [
-  { key: "bak", label: "Bakoperator" },
-  { key: "op", label: "Inpakoperator" },
-  { key: "asst", label: "Inpakassistent" },
-];
 
 const STORAGE_KEY = "labeff_weekplanner_v1";
 
@@ -166,6 +162,7 @@ function getInitialPlannerState() {
 }
 
 export function ProductionPlanner() {
+  const { getText, t, language } = useLanguage();
   const initial = getInitialPlannerState();
   const [data, setData] = useState<PlannerData>(initial.data);
   const [settings, setSettings] = useState<PlannerSettings>(initial.settings);
@@ -178,6 +175,15 @@ export function ProductionPlanner() {
       {} as Record<Day, boolean>,
     ),
   );
+
+  // Translated labels
+  const getDayName = (day: Day) => getText(t.days[day]);
+  const getShiftName = (shift: Shift) => getText(t.shifts[shift]);
+  const ROLES: Array<{ key: RoleKey; label: string }> = [
+    { key: "bak", label: getText(t.roles.bakoperator) },
+    { key: "op", label: getText(t.roles.inpakoperator) },
+    { key: "asst", label: getText(t.roles.inpakassistent) },
+  ];
 
   const toggleDay = (day: Day) => {
     const willOpen = !expandedDays[day];
@@ -429,20 +435,22 @@ export function ProductionPlanner() {
     const borderColor = [209, 213, 219] as [number, number, number];
 
     // Title
+    const pdfTitle = getText(t.planner.pdfTitle);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(16);
     pdf.setTextColor(navy);
     pdf.text(
-      `Weekplanner – Week ${nextWeek.weekNumber} (${nextWeek.dates["Maandag"]} – ${nextWeek.dates["Vrijdag"]} ${nextWeek.year})`,
+      `${pdfTitle} – ${getText(t.common.week)} ${nextWeek.weekNumber} (${nextWeek.dates["Maandag"]} – ${nextWeek.dates["Vrijdag"]} ${nextWeek.year})`,
       margin,
       margin + 4,
     );
 
+    const dateLocale = language === "en" ? "en-GB" : "nl-NL";
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(120, 120, 120);
     pdf.text(
-      `Gegenereerd op: ${new Date().toLocaleDateString("nl-NL", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`,
+      `${language === "en" ? "Generated on" : "Gegenereerd op"}: ${new Date().toLocaleDateString(dateLocale, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`,
       margin,
       margin + 18,
     );
@@ -453,7 +461,7 @@ export function ProductionPlanner() {
       // Build header rows
       const headerRow1 = [
         {
-          content: "Lijn",
+          content: getText(t.common.line),
           rowSpan: 2,
           styles: {
             halign: "left" as const,
@@ -463,7 +471,7 @@ export function ProductionPlanner() {
           },
         },
         ...SHIFTS.map((shift) => ({
-          content: shift,
+          content: getShiftName(shift),
           colSpan: 3,
           styles: {
             halign: "center" as const,
@@ -505,7 +513,7 @@ export function ProductionPlanner() {
         );
         return [
           {
-            content: `Lijn ${line}`,
+            content: `${getText(t.planner.pdfLine)} ${line}`,
             styles: {
               halign: "left" as const,
               fillColor: lineBg,
@@ -520,7 +528,7 @@ export function ProductionPlanner() {
       // Totals row
       const totalRow = [
         {
-          content: "Totaal",
+          content: getText(t.planner.pdfTotal),
           styles: {
             halign: "left" as const,
             fontStyle: "bold" as const,
@@ -553,17 +561,17 @@ export function ProductionPlanner() {
         const tags: string[] = [];
         const inactiveLines = LINES.filter((l) => !s.activeLines[l]);
         if (inactiveLines.length > 0) {
-          tags.push(`Uit: ${inactiveLines.join(", ")}`);
+          tags.push(`${getText(t.planner.off)}: ${inactiveLines.join(", ")}`);
         }
-        if (s.a8stuks) tags.push("A: 8-stuks (+1 asst)");
-        if (s.bType === "mini") tags.push("B: mini (2 asst)");
-        if (s.eTray) tags.push("E: tray (+1 asst)");
+        if (s.a8stuks) tags.push(getText(t.planner.a8stuks));
+        if (s.bType === "mini") tags.push(getText(t.planner.bMini));
+        if (s.eTray) tags.push(getText(t.planner.eTray));
         return tags.length > 0 ? tags.join("  •  ") : "–";
       });
 
       const conditionsRow = [
         {
-          content: "Condities",
+          content: getText(t.planner.pdfConditions),
           styles: {
             halign: "left" as const,
             fontStyle: "bold" as const,
@@ -603,7 +611,11 @@ export function ProductionPlanner() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(11);
       pdf.setTextColor(navy);
-      pdf.text(`${day}  –  ${nextWeek.dates[day]}`, margin + 8, startY + 13);
+      pdf.text(
+        `${getDayName(day)}  –  ${nextWeek.dates[day]}`,
+        margin + 8,
+        startY + 13,
+      );
       startY += 22;
 
       // Render the table
@@ -680,38 +692,38 @@ export function ProductionPlanner() {
           type="button"
           onClick={autoFillWeek}
           className="rounded-lg bg-brand-navy px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-brand-navy/90">
-          Auto vullen (blauwprint)
+          {getText(t.planner.autoFill)}
         </button>
         <button
           type="button"
           onClick={resetWeek}
           className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-neutral-700 hover:border-neutral-300">
-          Reset week
+          {getText(t.planner.resetWeek)}
         </button>
         <button
           type="button"
           onClick={exportToPdf}
           className="rounded-lg border border-brand-gold/40 bg-brand-gold/10 px-4 py-2 text-xs sm:text-sm font-semibold text-brand-navy hover:bg-brand-gold/20">
-          Export PDF
+          {getText(t.planner.exportPdf)}
         </button>
         <span className="mx-1 hidden sm:inline text-neutral-300">|</span>
         <button
           type="button"
           onClick={expandAll}
           className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-500 hover:border-neutral-300 hover:text-neutral-700">
-          ▼ Alles openen
+          ▼ {getText(t.planner.expandAll)}
         </button>
         <button
           type="button"
           onClick={collapseAll}
           className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-500 hover:border-neutral-300 hover:text-neutral-700">
-          ▲ Alles sluiten
+          ▲ {getText(t.planner.collapseAll)}
         </button>
       </div>
 
       <div className="flex items-center gap-3 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 py-2.5">
         <span className="rounded-lg bg-brand-navy px-3 py-1 text-sm font-bold text-white">
-          Week {nextWeek.weekNumber}
+          {getText(t.planner.nextWeek)} {nextWeek.weekNumber}
         </span>
         <span className="text-sm font-medium text-brand-navy">
           {nextWeek.dates["Maandag"]} – {nextWeek.dates["Vrijdag"]}{" "}
@@ -736,7 +748,7 @@ export function ProductionPlanner() {
               data-export-day-header
               className="flex w-full items-center justify-between border-b border-brand-gold/20 bg-brand-gold/10 px-4 py-3 text-left transition-colors hover:bg-brand-gold/15">
               <h3 className="text-sm sm:text-base font-bold text-brand-navy">
-                {day}{" "}
+                {getDayName(day)}{" "}
                 <span className="text-xs sm:text-sm font-normal text-brand-navy/60">
                   {nextWeek.dates[day]}
                 </span>
@@ -748,7 +760,8 @@ export function ProductionPlanner() {
                       <span
                         key={shift}
                         className="rounded-md bg-white/80 px-2 py-0.5 font-medium">
-                        {shift.charAt(0)}: {totalsByDayShift[day][shift]}
+                        {getShiftName(shift).charAt(0)}:{" "}
+                        {totalsByDayShift[day][shift]}
                       </span>
                     ))}
                     <span className="rounded-md bg-brand-navy/10 px-2 py-0.5 font-bold text-brand-navy">
@@ -795,7 +808,7 @@ export function ProductionPlanner() {
                             <p
                               data-export-shift-title
                               className="text-xs font-bold text-neutral-700">
-                              {shift}
+                              {getShiftName(shift)}
                             </p>
                             <div className="flex items-center gap-2">
                               <button
@@ -808,20 +821,20 @@ export function ProductionPlanner() {
                                   )
                                 }
                                 className="text-[10px] font-semibold text-brand-navy hover:text-brand-gold">
-                                Auto vullen
+                                {getText(t.planner.autoFillShift)}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => resetShift(day, shift)}
                                 className="text-[10px] font-semibold text-neutral-400 hover:text-red-500">
-                                Reset
+                                {getText(t.planner.resetShift)}
                               </button>
                             </div>
                           </div>
 
                           <div className="mt-2">
                             <p className="text-[10px] uppercase tracking-wide text-neutral-400">
-                              Actieve lijnen
+                              {getText(t.calculator.activeLines)}
                             </p>
                             <div className="mt-1 grid grid-cols-5 gap-1 text-[10px]">
                               {LINES.map((line) => (
@@ -852,7 +865,7 @@ export function ProductionPlanner() {
 
                           <div className="mt-3">
                             <p className="text-[10px] uppercase tracking-wide text-neutral-400">
-                              Condities (inpaklijn)
+                              {getText(t.calculator.conditions)}
                             </p>
                             <div className="mt-1 flex flex-wrap gap-2 text-[10px]">
                               <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
@@ -868,7 +881,7 @@ export function ProductionPlanner() {
                                   className="h-3 w-3 accent-brand-gold"
                                 />
                                 <span className="text-neutral-600">
-                                  A • 8-stuks
+                                  {getText(t.planner.a8stuksShort)}
                                 </span>
                               </label>
                               <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
@@ -886,7 +899,7 @@ export function ProductionPlanner() {
                                   className="h-3 w-3 accent-brand-gold"
                                 />
                                 <span className="text-neutral-600">
-                                  B • mini
+                                  {getText(t.planner.bMiniShort)}
                                 </span>
                               </label>
                               <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
@@ -902,14 +915,16 @@ export function ProductionPlanner() {
                                   className="h-3 w-3 accent-brand-gold"
                                 />
                                 <span className="text-neutral-600">
-                                  E • tray
+                                  {getText(t.planner.eTrayShort)}
                                 </span>
                               </label>
                             </div>
                           </div>
 
                           <div className="mt-3 flex items-center justify-between text-[10px]">
-                            <span className="text-neutral-400">Totaal FTE</span>
+                            <span className="text-neutral-400">
+                              {getText(t.planner.shiftTotalRow)}
+                            </span>
                             <span className="font-semibold text-brand-navy">
                               {totalsByDayShift[day][shift]}
                             </span>
@@ -927,14 +942,14 @@ export function ProductionPlanner() {
                         <thead>
                           <tr>
                             <th className="sticky left-0 z-10 bg-white border border-neutral-200 px-2 py-1 text-left">
-                              Lijn
+                              {getText(t.planner.line)}
                             </th>
                             {SHIFTS.map((shift) => (
                               <th
                                 key={shift}
                                 colSpan={3}
                                 className="border border-neutral-200 bg-brand-gold/10 px-2 py-1 text-center font-semibold text-brand-navy">
-                                {shift}
+                                {getShiftName(shift)}
                               </th>
                             ))}
                           </tr>
@@ -955,7 +970,7 @@ export function ProductionPlanner() {
                           {LINES.map((line) => (
                             <tr key={line}>
                               <td className="sticky left-0 z-10 bg-white border border-neutral-200 px-2 py-1 font-semibold text-neutral-700">
-                                Lijn {line}
+                                {getText(t.planner.line)} {line}
                               </td>
                               {SHIFTS.flatMap((shift) =>
                                 ROLES.map((role) => {

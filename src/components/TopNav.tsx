@@ -4,19 +4,21 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/ui";
 import { AnimatePresence, motion } from "framer-motion";
-
-const links = [
-  { id: "intro", label: "Intro" },
-  { id: "blauwprint", label: "Blauwprint" },
-  { id: "planning", label: "Planning" },
-  { id: "calculator", label: "Calculator" },
-  { id: "planner", label: "Planner" },
-  { id: "pause-aflos", label: "Pause aflos" },
-] as const;
+import { useLanguage } from "./LanguageProvider";
 
 export function TopNav() {
+  const { language, setLanguage, t, getText } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const links = [
+    { id: "intro", label: getText(t.topNav.intro) },
+    { id: "blauwprint", label: getText(t.topNav.blauwprint) },
+    { id: "planning", label: getText(t.topNav.planning) },
+    { id: "calculator", label: getText(t.topNav.calculator) },
+    { id: "planner", label: getText(t.topNav.planner) },
+    { id: "pause-aflos", label: getText(t.topNav.pauseAflos) },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,23 +86,55 @@ export function TopNav() {
         </button>
 
         {/* Desktop nav */}
-        <nav
-          className={cn(
-            "hidden gap-1 rounded-xl p-1 text-sm font-semibold transition-all md:flex",
-            scrolled
-              ? "bg-neutral-100"
-              : "bg-white/95 shadow-sm ring-1 ring-neutral-200 backdrop-blur",
-          )}>
-          {links.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => scrollTo(l.id)}
-              className="rounded-lg px-4 py-2 text-neutral-600 transition-colors hover:bg-brand-gold/10 hover:text-brand-navy">
-              {l.label}
-            </button>
-          ))}
-        </nav>
+        <div className="hidden md:flex items-center gap-2">
+          <nav
+            className={cn(
+              "gap-1 rounded-xl p-1 text-sm font-semibold transition-all flex",
+              scrolled
+                ? "bg-neutral-100"
+                : "bg-white/95 shadow-sm ring-1 ring-neutral-200 backdrop-blur",
+            )}>
+            {links.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                onClick={() => scrollTo(l.id)}
+                className="rounded-lg px-4 py-2 text-neutral-600 transition-colors hover:bg-brand-gold/10 hover:text-brand-navy">
+                {l.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Language Switcher */}
+          <button
+            type="button"
+            onClick={() => setLanguage(language === "nl" ? "en" : "nl")}
+            className={cn(
+              "flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition-all",
+              scrolled
+                ? "bg-neutral-100 hover:bg-brand-gold/10"
+                : "bg-white/95 shadow-sm ring-1 ring-neutral-200 backdrop-blur hover:ring-brand-gold/50",
+            )}
+            title={
+              language === "nl" ? "Switch to English" : "Wissel naar Nederlands"
+            }>
+            <span
+              className={cn(
+                "transition-opacity",
+                language === "nl" ? "opacity-100" : "opacity-40",
+              )}>
+              🇳🇱
+            </span>
+            <span className="text-neutral-400">/</span>
+            <span
+              className={cn(
+                "transition-opacity",
+                language === "en" ? "opacity-100" : "opacity-40",
+              )}>
+              🇬🇧
+            </span>
+          </button>
+        </div>
 
         {/* Hamburger button - mobile only */}
         <button
@@ -150,6 +184,33 @@ export function TopNav() {
                   {l.label}
                 </button>
               ))}
+
+              {/* Mobile Language Switcher */}
+              <div className="pt-2 border-t border-neutral-200 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setLanguage(language === "nl" ? "en" : "nl")}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-neutral-600 transition-colors hover:bg-brand-gold/10 hover:text-brand-navy">
+                  <span
+                    className={cn(
+                      "text-lg",
+                      language === "nl" ? "opacity-100" : "opacity-40",
+                    )}>
+                    🇳🇱
+                  </span>
+                  <span className="text-neutral-400">/</span>
+                  <span
+                    className={cn(
+                      "text-lg",
+                      language === "en" ? "opacity-100" : "opacity-40",
+                    )}>
+                    🇬🇧
+                  </span>
+                  <span className="ml-2">
+                    {language === "nl" ? "Nederlands" : "English"}
+                  </span>
+                </button>
+              </div>
             </div>
           </motion.nav>
         )}

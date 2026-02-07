@@ -5,19 +5,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { aflosSchedule } from "@/data/aflosSchedule";
 import { clamp, formatClock } from "@/lib/time";
+import { translations } from "@/lib/translations";
 import { cn } from "@/lib/ui";
 
+import { useLanguage } from "./LanguageProvider";
 import { PeopleIcon } from "./PeopleIcon";
 
 const SPEEDS = [0.5, 1, 2, 4] as const;
 
-const SHIFTS = [
-  { id: "ochtend", label: "Ochtend", baseTime: "08:00" },
-  { id: "middag", label: "Middag", baseTime: "16:00" },
-  { id: "nacht", label: "Nacht", baseTime: "00:00" },
-] as const;
+const SHIFT_IDS = ["ochtend", "middag", "nacht"] as const;
+const SHIFT_BASE_TIMES = {
+  ochtend: "08:00",
+  middag: "16:00",
+  nacht: "00:00",
+} as const;
 
-type ShiftId = (typeof SHIFTS)[number]["id"];
+type ShiftId = (typeof SHIFT_IDS)[number];
 
 const AFLOS_ARRIVAL_MINUTE = 30; // 08:30 (relative to baseTime=08:00)
 const AFLOS_BREAK_START_MINUTE = 90; // 09:30
@@ -217,21 +220,34 @@ function AflosTimelineRow({
   baseTime: string;
   onSelectMinute: (minute: number) => void;
 }) {
+  const { getText } = useLanguage();
+  const t = translations;
+  
   const pct =
     maxMinute > 0 ? (clamp(nowMinute, 0, maxMinute) / maxMinute) * 100 : 0;
+
+  // Translation keys for block labels
+  const labelOffsite = getText(t.aflos.offsite);
+  const labelOnLines = getText(t.aflos.onLine) + " (D/E)";
+  const labelOwnBreak = getText(t.aflos.eigenPauze) + " (30m)";
+  const labelOtherLines = getText(t.aflos.andereLijnen);
+  const labelBreak = getText(t.aflos.pause);
+  const labelOther = getText(t.aflos.otherLines);
 
   const blocks = useMemo(() => {
     return [
       {
         key: "offsite-start",
-        label: "Offsite",
+        label: labelOffsite,
+        shortLabel: labelOffsite,
         startMinute: 0,
         durationMinutes: AFLOS_ARRIVAL_MINUTE,
         tone: "neutral" as const,
       },
       {
         key: "onlines-1",
-        label: "Op de lijnen (D/E)",
+        label: labelOnLines,
+        shortLabel: "D/E",
         startMinute: AFLOS_ARRIVAL_MINUTE,
         durationMinutes: Math.max(
           0,
@@ -241,14 +257,16 @@ function AflosTimelineRow({
       },
       {
         key: "ownbreak",
-        label: "Eigen pauze (30m)",
+        label: labelOwnBreak,
+        shortLabel: labelBreak,
         startMinute: AFLOS_BREAK_START_MINUTE,
         durationMinutes: AFLOS_BREAK_DURATION,
         tone: "orange" as const,
       },
       {
         key: "otherlines",
-        label: "Ondersteuning andere lijnen",
+        label: labelOtherLines,
+        shortLabel: labelOther,
         startMinute: OTHER_LINES_START_MINUTE,
         durationMinutes: Math.max(
           0,
@@ -258,7 +276,8 @@ function AflosTimelineRow({
       },
       {
         key: "onlines-2",
-        label: "Op de lijnen (D/E)",
+        label: labelOnLines,
+        shortLabel: "D/E",
         startMinute: OTHER_LINES_END_MINUTE,
         durationMinutes: Math.max(
           0,
@@ -268,13 +287,14 @@ function AflosTimelineRow({
       },
       {
         key: "offsite-end",
-        label: "Offsite",
+        label: labelOffsite,
+        shortLabel: labelOffsite,
         startMinute: END_OF_SHIFT_MINUTE,
         durationMinutes: Math.max(0, maxMinute - END_OF_SHIFT_MINUTE),
         tone: "neutral" as const,
       },
     ].filter((b) => b.durationMinutes > 0);
-  }, [maxMinute]);
+  }, [maxMinute, labelOffsite, labelOnLines, labelOwnBreak, labelOtherLines, labelBreak, labelOther]);
 
   return (
     <div className="grid gap-1.5 sm:gap-2">
@@ -319,13 +339,6 @@ function AflosTimelineRow({
             },
           };
 
-          // Shorten labels for better readability
-          let shortLabel = b.label;
-          if (b.label === "Op de lijnen (D/E)") shortLabel = "D/E";
-          else if (b.label === "Eigen pauze (30m)") shortLabel = "Pauze";
-          else if (b.label === "Ondersteuning andere lijnen")
-            shortLabel = "Andere";
-
           return (
             <button
               key={b.key}
@@ -340,7 +353,7 @@ function AflosTimelineRow({
                 baseTime,
                 b.startMinute,
               )}–${formatClock(baseTime, b.startMinute + b.durationMinutes)}`}>
-              {shortLabel}
+              {b.shortLabel}
             </button>
           );
         })}
@@ -350,14 +363,25 @@ function AflosTimelineRow({
 }
 
 export function AflosSimulator() {
+  const { getText } = useLanguage();
+  const t = translations;
+  
+  const getShiftLabel = (id: ShiftId): string => {
+    const shiftMap: Record<ShiftId, { nl: string; en: string }> = {
+      ochtend: t.shifts.Ochtend,
+      middag: t.shifts.Middag,
+      nacht: t.shifts.Nacht,
+    };
+    return getText(shiftMap[id]);
+  };
+
   const [shiftId, setShiftId] = useState<ShiftId>("ochtend");
-  const currentShift = SHIFTS.find((s) => s.id === shiftId) ?? SHIFTS[0];
-  const baseTime = currentShift.baseTime;
+  const baseTime = SHIFT_BASE_TIMES[shiftId];
 
   const maxMinute = aflosSchedule.endMinute;
   const playback = usePlayback(maxMinute);
 
-  const t = useMemo(
+  const currentT = useMemo(
     () => clamp(Math.round(playback.minute), 0, maxMinute),
     [playback.minute, maxMinute],
   );
@@ -370,19 +394,19 @@ export function AflosSimulator() {
 
     for (const lane of aflosSchedule.lanes) {
       byLane[lane.id] = {
-        breakCount: getLaneBreakCount(lane.id, t),
+        breakCount: getLaneBreakCount(lane.id, currentT),
         workers: lane.workers,
       };
     }
 
     return byLane;
-  }, [t]);
+  }, [currentT]);
 
   const totalAflos = aflosSchedule.aflosTeam.count;
-  const aflosOnSite = t >= AFLOS_ARRIVAL_MINUTE && t < END_OF_SHIFT_MINUTE;
+  const aflosOnSite = currentT >= AFLOS_ARRIVAL_MINUTE && currentT < END_OF_SHIFT_MINUTE;
   const aflosBreakEnd = AFLOS_BREAK_START_MINUTE + AFLOS_BREAK_DURATION;
   const aflosOnOwnBreak =
-    aflosOnSite && t >= AFLOS_BREAK_START_MINUTE && t < aflosBreakEnd;
+    aflosOnSite && currentT >= AFLOS_BREAK_START_MINUTE && currentT < aflosBreakEnd;
   const aflosAvailableNow = aflosOnSite && !aflosOnOwnBreak;
   const maxAflosAvailable = aflosAvailableNow ? totalAflos : 0;
 
@@ -458,22 +482,22 @@ export function AflosSimulator() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {/* Shift Selector */}
             <div className="flex items-center rounded-lg bg-neutral-50 p-0.5 sm:p-1">
-              {SHIFTS.map((shift) => (
+              {SHIFT_IDS.map((id) => (
                 <button
-                  key={shift.id}
+                  key={id}
                   type="button"
                   onClick={() => {
-                    setShiftId(shift.id);
+                    setShiftId(id);
                     playback.setIsPlaying(false);
                     playback.setMinute(0);
                   }}
                   className={cn(
                     "rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold transition-colors",
-                    shiftId === shift.id
+                    shiftId === id
                       ? "bg-brand-gold text-white shadow-sm"
                       : "text-neutral-600 hover:bg-white hover:text-neutral-800",
                   )}>
-                  {shift.label.slice(0, 3)}
+                  {getShiftLabel(id).slice(0, 3)}
                 </button>
               ))}
             </div>
@@ -481,7 +505,7 @@ export function AflosSimulator() {
             {/* Time Display */}
             <div className="flex items-center gap-2 sm:gap-3 rounded-lg sm:rounded-xl bg-brand-gold/10 px-2 sm:px-4 py-1.5 sm:py-2">
               <span className="text-lg sm:text-2xl font-bold tabular-nums text-brand-gold">
-                {formatClock(baseTime, t)}
+                {formatClock(baseTime, currentT)}
               </span>
             </div>
 
@@ -599,7 +623,7 @@ export function AflosSimulator() {
                 type="range"
                 min={0}
                 max={maxMinute}
-                value={t}
+                value={currentT}
                 onChange={(e) => {
                   playback.setIsPlaying(false);
                   playback.setMinute(Number(e.target.value));
@@ -617,23 +641,23 @@ export function AflosSimulator() {
         <div className="rounded-xl sm:rounded-2xl border border-brand-gold/20 bg-white p-3 sm:p-4 shadow-sm">
           <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h3 className="text-xs sm:text-sm font-semibold text-neutral-700">
-              Tijdlijn
+              {getText(t.aflos.timeline)}
             </h3>
             <div className="flex items-center gap-2 text-[10px] sm:text-xs">
               <span className="rounded-full bg-brand-gold/15 px-2 py-0.5 font-medium text-brand-gold">
-                E: {getLaneActiveBlock("E", t)?.label ?? "—"}
+                E: {getLaneActiveBlock("E", currentT)?.label ?? "—"}
               </span>
               <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-medium text-neutral-600">
-                D: {getLaneActiveBlock("D", t)?.label ?? "—"}
+                D: {getLaneActiveBlock("D", currentT)?.label ?? "—"}
               </span>
             </div>
           </div>
 
           <div className="grid gap-3 sm:gap-4">
             <AflosTimelineRow
-              label="Aflos"
+              label={getText(t.aflos.aflosPool)}
               maxMinute={maxMinute}
-              nowMinute={t}
+              nowMinute={currentT}
               baseTime={baseTime}
               onSelectMinute={(m) => {
                 playback.setIsPlaying(false);
@@ -642,9 +666,9 @@ export function AflosSimulator() {
             />
             <TimelineRow
               laneId="E"
-              label="Lijn E"
+              label={`${getText(t.planner.line)} E`}
               maxMinute={maxMinute}
-              nowMinute={t}
+              nowMinute={currentT}
               baseTime={baseTime}
               onSelectMinute={(m) => {
                 playback.setIsPlaying(false);
@@ -653,9 +677,9 @@ export function AflosSimulator() {
             />
             <TimelineRow
               laneId="D"
-              label="Lijn D"
+              label={`${getText(t.planner.line)} D`}
               maxMinute={maxMinute}
-              nowMinute={t}
+              nowMinute={currentT}
               baseTime={baseTime}
               onSelectMinute={(m) => {
                 playback.setIsPlaying(false);
@@ -670,7 +694,7 @@ export function AflosSimulator() {
           {aflosSchedule.lanes.map((lane) => {
             const breakCount = perLane[lane.id].breakCount;
             const covered = coveredByLane[lane.id];
-            const activeBlock = getLaneActiveBlock(lane.id, t);
+            const activeBlock = getLaneActiveBlock(lane.id, currentT);
 
             const workerIds = Array.from(
               { length: lane.workers },
@@ -711,7 +735,7 @@ export function AflosSimulator() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <h3 className="text-base sm:text-lg font-bold text-neutral-900">
-                      {lane.label}
+                      {getText(t.planner.line)} {lane.id}
                     </h3>
                     {activeBlock && (
                       <span className="rounded-full bg-orange-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-orange-700">
@@ -728,7 +752,7 @@ export function AflosSimulator() {
                             ? "bg-emerald-100 text-emerald-700"
                             : "bg-rose-100 text-rose-700",
                         )}>
-                        {covered}/{breakCount} gedekt
+                        {covered}/{breakCount} {getText(t.aflos.covered)}
                       </span>
                     )}
                   </div>
@@ -738,7 +762,7 @@ export function AflosSimulator() {
                 <div className="mt-3 sm:mt-4 grid gap-2 sm:gap-3 grid-cols-[1fr_auto]">
                   <div>
                     <p className="mb-1.5 sm:mb-2 text-[10px] sm:text-xs font-medium text-neutral-400">
-                      Op de lijn
+                      {getText(t.aflos.onLine)}
                     </p>
                     <div className="min-h-9 sm:min-h-11 rounded-lg sm:rounded-xl border border-neutral-200 bg-neutral-50/50 p-1.5 sm:p-2">
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -779,8 +803,8 @@ export function AflosSimulator() {
                                     damping: 35,
                                   }}
                                   className="inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-dashed ring-orange-200 bg-white"
-                                  title={`${workerId} uncovered`}
-                                  aria-label={`${workerId} uncovered`}>
+                                  title={`${workerId} ${getText(t.aflos.uncovered)}`}
+                                  aria-label={`${workerId} ${getText(t.aflos.uncovered)}`}>
                                   <span className="text-[10px] font-semibold text-orange-600">
                                     —
                                   </span>
@@ -812,7 +836,7 @@ export function AflosSimulator() {
 
                   <div className="min-w-24 sm:min-w-32">
                     <p className="mb-1.5 sm:mb-2 text-[10px] sm:text-xs font-medium text-neutral-400">
-                      Op pauze
+                      {getText(t.aflos.onBreak)}
                     </p>
                     <div className="min-h-9 sm:min-h-11 rounded-lg sm:rounded-xl border border-orange-200 bg-orange-50/50 p-1.5 sm:p-2">
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -831,7 +855,7 @@ export function AflosSimulator() {
                               }}>
                               <PeopleIcon
                                 variant="break"
-                                label={`${workerId} (break)`}
+                                label={`${workerId} (${getText(t.aflos.pause)})`}
                               />
                             </motion.div>
                           ))}
@@ -849,7 +873,7 @@ export function AflosSimulator() {
         <div className="rounded-xl sm:rounded-2xl border border-brand-gold/20 bg-white p-3 sm:p-4 shadow-sm">
           <div className="mb-2 sm:mb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-0">
             <h3 className="text-xs sm:text-sm font-semibold text-neutral-700">
-              Aflos Pool
+              {getText(t.aflos.aflosPool)}
             </h3>
             <span
               className={cn(
@@ -863,19 +887,19 @@ export function AflosSimulator() {
                       : "bg-blue-100 text-blue-700",
               )}>
               {aflosOnOwnBreak
-                ? "Eigen pauze"
+                ? getText(t.aflos.eigenPauze)
                 : !aflosOnSite
-                  ? "Niet gearriveerd"
+                  ? getText(t.aflos.nietGearriveerd)
                   : aflosAllocation.otherLines.length > 0
-                    ? `Andere lijnen (${aflosAllocation.otherLines.length})`
-                    : "Beschikbaar"}
+                    ? `${getText(t.aflos.andereLijnen)} (${aflosAllocation.otherLines.length})`
+                    : getText(t.aflos.beschikbaar)}
             </span>
           </div>
 
           <div className="grid gap-2 sm:gap-3 grid-cols-3">
             <div>
               <p className="mb-1.5 sm:mb-2 text-[10px] sm:text-xs font-medium text-neutral-400">
-                Offsite
+                {getText(t.aflos.offsite)}
               </p>
               <div className="min-h-9 sm:min-h-11 rounded-lg sm:rounded-xl border border-neutral-200 bg-neutral-50/50 p-1.5 sm:p-2">
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -892,7 +916,7 @@ export function AflosSimulator() {
                         }}>
                         <PeopleIcon
                           variant="aflos"
-                          label={`Aflos ${id} (offsite)`}
+                          label={`Aflos ${id} (${getText(t.aflos.offsite).toLowerCase()})`}
                         />
                       </motion.div>
                     ))}
@@ -903,7 +927,7 @@ export function AflosSimulator() {
 
             <div>
               <p className="mb-1.5 sm:mb-2 text-[10px] sm:text-xs font-medium text-neutral-400">
-                Andere
+                {getText(t.aflos.otherLines)}
               </p>
               <div className="min-h-9 sm:min-h-11 rounded-lg sm:rounded-xl border border-emerald-200 bg-emerald-50/50 p-1.5 sm:p-2">
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -922,7 +946,7 @@ export function AflosSimulator() {
                         }}>
                         <PeopleIcon
                           variant="aflos"
-                          label={`Aflos ${id} (other lines)`}
+                          label={`Aflos ${id} (${getText(t.aflos.otherLines).toLowerCase()})`}
                         />
                       </motion.div>
                     ))}
@@ -933,7 +957,7 @@ export function AflosSimulator() {
 
             <div>
               <p className="mb-1.5 sm:mb-2 text-[10px] sm:text-xs font-medium text-neutral-400">
-                Pauze
+                {getText(t.aflos.pause)}
               </p>
               <div className="min-h-9 sm:min-h-11 rounded-lg sm:rounded-xl border border-orange-200 bg-orange-50/50 p-1.5 sm:p-2">
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -952,7 +976,7 @@ export function AflosSimulator() {
                         }}>
                         <PeopleIcon
                           variant="aflos"
-                          label={`Aflos ${id} (break)`}
+                          label={`Aflos ${id} (${getText(t.aflos.pause).toLowerCase()})`}
                         />
                       </motion.div>
                     ))}

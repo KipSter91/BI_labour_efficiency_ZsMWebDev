@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/ui";
+import { useLanguage } from "./LanguageProvider";
 
 /*
  * BLAUWPRINT BASE FTE VALUES
@@ -106,6 +107,7 @@ function Toggle({
 }
 
 export function CalculatorPanel() {
+  const { getText, t } = useLanguage();
   const [state, setState] = useState<State>({
     // Default: alle lijnen actief behalve B mini
     lijnA: true,
@@ -226,14 +228,27 @@ export function CalculatorPanel() {
   const grandTotal = inpakTotals.total + baklijnTotals.total;
 
   // Line data for table display - with extras info
+  const getLineName = (lineKey: string, bType: string) => {
+    const lineWord = getText(t.common.line);
+    if (lineKey === "B") {
+      const typeWord =
+        bType === "mini"
+          ? getText(t.blueprint.mini)
+          : getText(t.blueprint.normaal);
+      return `${lineWord} B (${typeWord.toLowerCase()})`;
+    }
+    return `${lineWord} ${lineKey}`;
+  };
+
   const linesTableData = [
     {
-      line: "Lijn A",
+      lineKey: "A",
+      line: getLineName("A", ""),
       active: state.lijnA,
       inpak: state.lijnA ? 2 + (state.lijnA_8stuks ? 1 : 0) : 0,
       inpakBase: 2,
       inpakExtra: state.lijnA_8stuks ? 1 : 0,
-      inpakExtraLabel: state.lijnA_8stuks ? "8st" : null,
+      inpakExtraLabel: state.lijnA_8stuks ? getText(t.calculator.stuks8) : null,
       operator: state.lijnA ? 1 : 0,
       bakoperator: state.lijnA ? 1 : 0,
       bakoperatorBase: 1,
@@ -241,7 +256,8 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: state.lijnBType === "mini" ? "Lijn B (mini)" : "Lijn B (normaal)",
+      lineKey: "B",
+      line: getLineName("B", state.lijnBType),
       active: state.lijnB,
       inpak: state.lijnB ? (state.lijnBType === "mini" ? 2 : 4) : 0,
       inpakBase: state.lijnBType === "mini" ? 2 : 4,
@@ -254,7 +270,8 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: "Lijn C",
+      lineKey: "C",
+      line: getLineName("C", ""),
       active: state.lijnC,
       inpak: state.lijnC ? 2 : 0,
       inpakBase: 2,
@@ -267,7 +284,8 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: "Lijn D",
+      lineKey: "D",
+      line: getLineName("D", ""),
       active: state.lijnD,
       inpak: state.lijnD ? 2 : 0,
       inpakBase: 2,
@@ -280,12 +298,13 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line: "Lijn E",
+      lineKey: "E",
+      line: getLineName("E", ""),
       active: state.lijnE,
       inpak: state.lijnE ? 4 + (state.lijnE_tray ? 1 : 0) : 0,
       inpakBase: 4,
       inpakExtra: state.lijnE_tray ? 1 : 0,
-      inpakExtraLabel: state.lijnE_tray ? "tray" : null,
+      inpakExtraLabel: state.lijnE_tray ? getText(t.calculator.tray) : null,
       operator: state.lijnE ? 1 : 0,
       bakoperator: state.lijnE ? 2 : 0,
       bakoperatorBase: 2,
@@ -307,7 +326,7 @@ export function CalculatorPanel() {
         {/* Column 1: Lijn selectie */}
         <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
           <h3 className="text-sm font-semibold text-brand-navy mb-3">
-            Actieve lijnen
+            {getText(t.calculator.activeLines)}
           </h3>
           <div className="space-y-2">
             {/* Lijn A */}
@@ -464,7 +483,9 @@ export function CalculatorPanel() {
                       }
                       className="h-3.5 w-3.5 accent-brand-gold"
                     />
-                    <span className="text-neutral-600">Tray +1</span>
+                    <span className="text-neutral-600">
+                      {getText(t.calculator.tray)} +1
+                    </span>
                   </label>
                 )}
               </div>
@@ -479,38 +500,47 @@ export function CalculatorPanel() {
           <table className="min-w-full text-left text-xs sm:text-sm">
             <thead className="bg-brand-gold/10 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
-                <th className="px-3 sm:px-4 py-2">Lijn</th>
+                <th className="px-3 sm:px-4 py-2">{getText(t.common.line)}</th>
                 <th className="px-3 sm:px-4 py-2">
-                  <span className="sm:hidden">Bak.</span>
-                  <span className="hidden sm:inline">Bakoperator</span>
+                  <span className="sm:hidden">
+                    {getText(t.roles.bakoperatorShort)}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {getText(t.roles.bakoperator)}
+                  </span>
                 </th>
                 <th className="px-3 sm:px-4 py-2">
-                  <span className="sm:hidden">Op.</span>
-                  <span className="hidden sm:inline">Inpakoperator</span>
+                  <span className="sm:hidden">
+                    {getText(t.roles.inpakoperatorShort)}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {getText(t.roles.inpakoperator)}
+                  </span>
                 </th>
                 <th className="px-3 sm:px-4 py-2">
-                  <span className="sm:hidden">Inp.</span>
-                  <span className="hidden sm:inline">Inpakassistent</span>
+                  <span className="sm:hidden">
+                    {getText(t.roles.inpakassistentShort)}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {getText(t.roles.inpakassistent)}
+                  </span>
                 </th>
                 <th className="px-3 sm:px-4 py-2">
                   <span className="sm:hidden">Tot.</span>
-                  <span className="hidden sm:inline">Totaal</span>
+                  <span className="hidden sm:inline">
+                    {getText(t.common.total)}
+                  </span>
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-gold/20">
               {linesTableData.map((row) => {
-                const shortName = row.line
-                  .replace("Lijn ", "")
-                  .replace(" (mini)", " M")
-                  .replace(" (normaal)", " N");
-
                 return (
                   <tr
-                    key={row.line}
+                    key={row.lineKey}
                     className="text-neutral-700">
                     <td className="whitespace-nowrap px-3 sm:px-4 py-2 font-medium text-neutral-900 text-xs sm:text-sm">
-                      <span className="sm:hidden">{shortName}</span>
+                      <span className="sm:hidden">{row.lineKey}</span>
                       <span className="hidden sm:inline">{row.line}</span>
                     </td>
                     <td className="px-3 sm:px-4 py-2">
@@ -542,7 +572,9 @@ export function CalculatorPanel() {
                     TOT ({linesTableData.length})
                   </span>
                   <span className="hidden sm:inline">
-                    TOTAAL ({linesTableData.length} lijnen)
+                    {getText(t.common.total).toUpperCase()} (
+                    {linesTableData.length}{" "}
+                    {getText(t.common.lines).toLowerCase()})
                   </span>
                 </td>
                 <td className="px-3 sm:px-4 py-2 sm:py-3 font-semibold text-neutral-700">

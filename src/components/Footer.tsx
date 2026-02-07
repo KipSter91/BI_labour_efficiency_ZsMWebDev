@@ -1,7 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useLanguage } from "./LanguageProvider";
 
 export function Footer() {
+  const { getText, t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -10,7 +14,7 @@ export function Footer() {
         <div className="flex items-center justify-between">
           {/* Left: Copyright */}
           <p className="text-[10px] sm:text-xs text-neutral-500">
-            © {currentYear} All rights reserved
+            © {currentYear} {getText(t.footer.allRightsReserved)}
           </p>
 
           {/* Right: Developed by */}
@@ -20,7 +24,7 @@ export function Footer() {
             rel="noopener noreferrer"
             className="group flex items-center gap-1.5 sm:gap-2 transition-opacity hover:opacity-80">
             <span className="text-[10px] sm:text-xs text-neutral-500">
-              Developed by
+              {getText(t.footer.developedBy)}
             </span>
             <Image
               src="/images/zsmwebdev-logo.webp"

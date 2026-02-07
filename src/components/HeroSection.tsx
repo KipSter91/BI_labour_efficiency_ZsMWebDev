@@ -1,36 +1,39 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-const cards = [
-  {
-    id: "blauwprint",
-    title: "Blauwprint",
-    description: "Bezetting 2026 per lijn.",
-  },
-  {
-    id: "planning",
-    title: "Planningsregels",
-    description: "Wanneer FTE wijzigt.",
-  },
-  {
-    id: "calculator",
-    title: "FTE Calculator",
-    description: "Scenario berekening.",
-  },
-  {
-    id: "planner",
-    title: "Weekplanner",
-    description: "Shiftplanning en bezetting.",
-  },
-  {
-    id: "pause-aflos",
-    title: "Pauze-aflos",
-    description: "Simulatie Lijn D & E.",
-  },
-] as const;
+import { useLanguage } from "./LanguageProvider";
 
 export function HeroSection() {
+  const { getText, t } = useLanguage();
+
+  const cards = [
+    {
+      id: "blauwprint",
+      title: getText(t.heroCards.blauwprint.title),
+      description: getText(t.heroCards.blauwprint.description),
+    },
+    {
+      id: "planning",
+      title: getText(t.heroCards.planningsregels.title),
+      description: getText(t.heroCards.planningsregels.description),
+    },
+    {
+      id: "calculator",
+      title: getText(t.heroCards.fteCalculator.title),
+      description: getText(t.heroCards.fteCalculator.description),
+    },
+    {
+      id: "planner",
+      title: getText(t.heroCards.weekplanner.title),
+      description: getText(t.heroCards.weekplanner.description),
+    },
+    {
+      id: "pause-aflos",
+      title: getText(t.heroCards.pauzeAflos.title),
+      description: getText(t.heroCards.pauzeAflos.description),
+    },
+  ];
+
   function scrollTo(id: string) {
     document
       .getElementById(id)
@@ -54,15 +57,14 @@ export function HeroSection() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="text-center">
           <h1 className="mx-auto max-w-4xl text-3xl font-bold tracking-tight text-brand-navy sm:text-4xl md:text-5xl lg:text-6xl">
-            Van blauwprint naar
+            {getText(t.hero.titleLine1)}
             <span className="block text-brand-gold">
-              werkvloer beslissingen
+              {getText(t.hero.titleLine2)}
             </span>
           </h1>
 
           <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg leading-relaxed text-neutral-600 px-4 sm:px-0">
-            Blauwprint ≠ realiteit: FTE beweegt mee met planningcondities en
-            pause-aflos coverage.
+            {getText(t.hero.subtitle)}
           </p>
 
           {/* CTA Button */}
@@ -71,7 +73,7 @@ export function HeroSection() {
               type="button"
               onClick={() => scrollTo("calculator")}
               className="inline-flex items-center gap-2 rounded-full bg-brand-gold px-6 sm:px-8 py-3 sm:py-4 text-xs sm:text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-brand-gold/25 transition-all hover:bg-brand-gold/90 hover:shadow-xl hover:shadow-brand-gold/30 w-full sm:w-auto justify-center">
-              <span>Open FTE Calculator</span>
+              <span>{getText(t.hero.ctaButton)}</span>
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -95,7 +97,7 @@ export function HeroSection() {
           transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
           className="mt-10 sm:mt-16 px-2 sm:px-0">
           <p className="mb-3 sm:mb-4 text-center text-xs font-bold uppercase tracking-widest text-neutral-400">
-            Navigeer door de presentatie
+            {getText(t.hero.navigatePres)}
           </p>
           <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
             {cards.map((c, idx) => (
