@@ -648,7 +648,9 @@ export function ProductionPlanner() {
       startY = (pdf as any).lastAutoTable.finalY + 14;
     });
 
-    pdf.save("weekplanner.pdf");
+    pdf.save(
+      `weekplanner_week${nextWeek.weekNumber}_${nextWeek.dates["Maandag"].replace(" ", "-")}_${nextWeek.dates["Vrijdag"].replace(" ", "-")}_${nextWeek.year}.pdf`,
+    );
   };
 
   const totalsByDayShift = useMemo(() => {

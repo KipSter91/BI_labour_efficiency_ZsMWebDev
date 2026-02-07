@@ -27,7 +27,7 @@ const OTHER_LINES_END_MINUTE = 190; // 11:10
 
 const END_OF_SHIFT_MINUTE = Math.max(
   0,
-  ...aflosSchedule.blocks.map((b) => b.startMinute + b.durationMinutes)
+  ...aflosSchedule.blocks.map((b) => b.startMinute + b.durationMinutes),
 ); // 12:25
 
 type LaneId = (typeof aflosSchedule.lanes)[number]["id"];
@@ -48,12 +48,12 @@ function getBreakWorkerIds({
 }) {
   if (breakCount <= 0) return [] as WorkerId[];
 
-  // Visual rule: for lane E, wave 1 replaces the first 3, wave 2 replaces the last 3.
-  // This makes the "swap" clearly visible without tracking individual names.
+  // For Lijn E wave ②: take the last workers (after the first group)
   if (laneId === "E" && (activeBlockLabel ?? "").includes("②")) {
     return workerIds.slice(Math.max(0, workerIds.length - breakCount));
   }
 
+  // Default: take the first N workers
   return workerIds.slice(0, breakCount);
 }
 
@@ -109,7 +109,7 @@ function getLaneBreakCount(laneId: LaneId, minute: number) {
     (b) =>
       b.laneId === laneId &&
       minute >= b.startMinute &&
-      minute < b.startMinute + b.durationMinutes
+      minute < b.startMinute + b.durationMinutes,
   );
   return active ? active.breakCount : 0;
 }
@@ -119,7 +119,7 @@ function getLaneActiveBlock(laneId: LaneId, minute: number) {
     (b) =>
       b.laneId === laneId &&
       minute >= b.startMinute &&
-      minute < b.startMinute + b.durationMinutes
+      minute < b.startMinute + b.durationMinutes,
   );
 }
 
@@ -140,7 +140,7 @@ function TimelineRow({
 }) {
   const blocks = useMemo(
     () => aflosSchedule.blocks.filter((b) => b.laneId === laneId),
-    [laneId]
+    [laneId],
   );
 
   const pct =
@@ -183,15 +183,15 @@ function TimelineRow({
                 "absolute inset-y-0 flex items-center justify-center rounded-md sm:rounded-lg border px-1 sm:px-2 text-[10px] sm:text-sm font-bold transition-colors",
                 active
                   ? "border-orange-300 bg-orange-100 text-orange-800"
-                  : "border-orange-100 bg-orange-50/40 text-neutral-700 hover:bg-orange-50"
+                  : "border-orange-100 bg-orange-50/40 text-neutral-700 hover:bg-orange-50",
               )}
               style={{ left: `${left}%`, width: `${width}%` }}
               title={`${b.label} • ${formatClock(
                 baseTime,
-                b.startMinute
+                b.startMinute,
               )}–${formatClock(
                 baseTime,
-                b.startMinute + b.durationMinutes
+                b.startMinute + b.durationMinutes,
               )} • breakCount=${b.breakCount}`}>
               {shortLabel}
             </button>
@@ -235,7 +235,7 @@ function AflosTimelineRow({
         startMinute: AFLOS_ARRIVAL_MINUTE,
         durationMinutes: Math.max(
           0,
-          AFLOS_BREAK_START_MINUTE - AFLOS_ARRIVAL_MINUTE
+          AFLOS_BREAK_START_MINUTE - AFLOS_ARRIVAL_MINUTE,
         ),
         tone: "neutral" as const,
       },
@@ -252,7 +252,7 @@ function AflosTimelineRow({
         startMinute: OTHER_LINES_START_MINUTE,
         durationMinutes: Math.max(
           0,
-          OTHER_LINES_END_MINUTE - OTHER_LINES_START_MINUTE
+          OTHER_LINES_END_MINUTE - OTHER_LINES_START_MINUTE,
         ),
         tone: "emerald" as const,
       },
@@ -262,7 +262,7 @@ function AflosTimelineRow({
         startMinute: OTHER_LINES_END_MINUTE,
         durationMinutes: Math.max(
           0,
-          END_OF_SHIFT_MINUTE - OTHER_LINES_END_MINUTE
+          END_OF_SHIFT_MINUTE - OTHER_LINES_END_MINUTE,
         ),
         tone: "neutral" as const,
       },
@@ -333,12 +333,12 @@ function AflosTimelineRow({
               onClick={() => onSelectMinute(b.startMinute)}
               className={cn(
                 "absolute inset-y-0 flex items-center justify-center rounded-md sm:rounded-lg border px-1 sm:px-2 text-[10px] sm:text-sm font-bold transition-colors",
-                active ? toneClasses[b.tone].active : toneClasses[b.tone].idle
+                active ? toneClasses[b.tone].active : toneClasses[b.tone].idle,
               )}
               style={{ left: `${left}%`, width: `${width}%` }}
               title={`${b.label} • ${formatClock(
                 baseTime,
-                b.startMinute
+                b.startMinute,
               )}–${formatClock(baseTime, b.startMinute + b.durationMinutes)}`}>
               {shortLabel}
             </button>
@@ -359,7 +359,7 @@ export function AflosSimulator() {
 
   const t = useMemo(
     () => clamp(Math.round(playback.minute), 0, maxMinute),
-    [playback.minute, maxMinute]
+    [playback.minute, maxMinute],
   );
 
   const perLane = useMemo(() => {
@@ -398,7 +398,7 @@ export function AflosSimulator() {
   const aflosIds = useMemo(
     () =>
       Array.from({ length: totalAflos }, (_, idx) => `A${idx + 1}` as AflosId),
-    [totalAflos]
+    [totalAflos],
   );
 
   const aflosAllocation = useMemo(() => {
@@ -406,7 +406,7 @@ export function AflosSimulator() {
     const toE = availableIds.slice(0, coveredByLane.E);
     const toD = availableIds.slice(
       coveredByLane.E,
-      coveredByLane.E + coveredByLane.D
+      coveredByLane.E + coveredByLane.D,
     );
     const remaining = availableIds.slice(coveredByLane.E + coveredByLane.D);
 
@@ -415,8 +415,26 @@ export function AflosSimulator() {
 
     const inOtherLinesWindow =
       t >= OTHER_LINES_START_MINUTE && t < OTHER_LINES_END_MINUTE;
-    const otherLines = aflosAvailableNow && inOtherLinesWindow ? remaining : [];
-    const idle = aflosAvailableNow && !inOtherLinesWindow ? remaining : [];
+
+    // Any aflos not assigned to E or D can help other lines:
+    // - during the dedicated "andere lijnen" window (min 120-190)
+    // - OR whenever they're free during an active break block (e.g. R1②/R3②
+    //   only needs 2 aflos on E, so the 3rd is free for other lines)
+    const totalNeeded = perLane.E.breakCount + perLane.D.breakCount;
+    const someBlockActive = totalNeeded > 0;
+    const hasFreeAflos = remaining.length > 0;
+
+    const otherLines =
+      aflosAvailableNow &&
+      (inOtherLinesWindow || (someBlockActive && hasFreeAflos))
+        ? remaining
+        : [];
+    const idle =
+      aflosAvailableNow &&
+      !inOtherLinesWindow &&
+      !(someBlockActive && hasFreeAflos)
+        ? remaining
+        : [];
 
     return { offsite, ownBreak, otherLines, idle, toE, toD };
   }, [
@@ -427,6 +445,8 @@ export function AflosSimulator() {
     coveredByLane.D,
     coveredByLane.E,
     maxAflosAvailable,
+    perLane.D.breakCount,
+    perLane.E.breakCount,
     t,
   ]);
 
@@ -451,7 +471,7 @@ export function AflosSimulator() {
                     "rounded-md px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-semibold transition-colors",
                     shiftId === shift.id
                       ? "bg-brand-gold text-white shadow-sm"
-                      : "text-neutral-600 hover:bg-white hover:text-neutral-800"
+                      : "text-neutral-600 hover:bg-white hover:text-neutral-800",
                   )}>
                   {shift.label.slice(0, 3)}
                 </button>
@@ -528,7 +548,7 @@ export function AflosSimulator() {
                   onClick={() => {
                     playback.setIsPlaying(false);
                     playback.setMinute((m) =>
-                      clamp(Math.round(m) + step, 0, maxMinute)
+                      clamp(Math.round(m) + step, 0, maxMinute),
                     );
                   }}
                   className="rounded-md px-2 py-1 text-xs font-medium text-neutral-500 hover:bg-white hover:text-neutral-700 transition-colors">
@@ -543,7 +563,7 @@ export function AflosSimulator() {
                   onClick={() => {
                     playback.setIsPlaying(false);
                     playback.setMinute((m) =>
-                      clamp(Math.round(m) + step, 0, maxMinute)
+                      clamp(Math.round(m) + step, 0, maxMinute),
                     );
                   }}
                   className="rounded-md px-2 py-1 text-xs font-medium text-neutral-500 hover:bg-white hover:text-neutral-700 transition-colors">
@@ -563,7 +583,7 @@ export function AflosSimulator() {
                     "rounded-md px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold transition-colors",
                     playback.speed === s
                       ? "bg-neutral-900 text-white shadow-sm"
-                      : "text-neutral-500 hover:bg-white hover:text-neutral-700"
+                      : "text-neutral-500 hover:bg-white hover:text-neutral-700",
                   )}>
                   {s}x
                 </button>
@@ -654,7 +674,7 @@ export function AflosSimulator() {
 
             const workerIds = Array.from(
               { length: lane.workers },
-              (_, idx) => `${lane.id}-W${idx + 1}` as WorkerId
+              (_, idx) => `${lane.id}-W${idx + 1}` as WorkerId,
             );
             const breakWorkerIds = getBreakWorkerIds({
               laneId: lane.id,
@@ -668,8 +688,8 @@ export function AflosSimulator() {
               lane.id === "E"
                 ? aflosAllocation.toE
                 : lane.id === "D"
-                ? aflosAllocation.toD
-                : [];
+                  ? aflosAllocation.toD
+                  : [];
 
             const replacementMap = new Map<WorkerId, AflosId>();
             for (
@@ -682,33 +702,6 @@ export function AflosSimulator() {
 
             const slotWorkerIds = workerIds;
             const isFullyCovered = breakCount > 0 && covered === breakCount;
-
-            // PO and PO Assistant alternate breaks (for Lijn E and D only)
-            const hasPOPair = lane.id === "E" || lane.id === "D";
-
-            let poOnBreak = false;
-            let poaOnBreak = false;
-
-            if (hasPOPair) {
-              if (lane.id === "E" && activeBlock) {
-                // Lijn E: alternate per block (block 0: PO, block 1: PO-A, etc.)
-                const blockIndex = aflosSchedule.blocks.findIndex(
-                  (b) => b.label === activeBlock.label
-                );
-                poOnBreak = blockIndex % 2 === 0;
-                poaOnBreak = blockIndex % 2 === 1;
-              } else if (lane.id === "D") {
-                // Lijn D: fixed times for PO breaks (independent of worker blocks)
-                // 1st round: PO 9:10-9:30 (70-90), PO-A 9:30-9:50 (90-110)
-                // 2nd round: PO 12:00-12:20 (240-260), PO-A 12:20-12:40 (260-280)
-                const poBreak1 = t >= 70 && t < 90;
-                const poBreak2 = t >= 240 && t < 260;
-                const poaBreak1 = t >= 90 && t < 110;
-                const poaBreak2 = t >= 260 && t < 280;
-                poOnBreak = poBreak1 || poBreak2;
-                poaOnBreak = poaBreak1 || poaBreak2;
-              }
-            }
 
             return (
               <div
@@ -733,7 +726,7 @@ export function AflosSimulator() {
                           "rounded-full px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold",
                           isFullyCovered
                             ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700"
+                            : "bg-rose-100 text-rose-700",
                         )}>
                         {covered}/{breakCount} gedekt
                       </span>
@@ -812,40 +805,6 @@ export function AflosSimulator() {
                               </motion.div>
                             );
                           })}
-                          {/* PO on line (when not on break) */}
-                          {hasPOPair && !poOnBreak && (
-                            <motion.div
-                              key={`slot-${lane.id}-PO`}
-                              layoutId={`${lane.id}-PO`}
-                              layout
-                              transition={{
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 35,
-                              }}>
-                              <PeopleIcon
-                                variant="po"
-                                label="PO"
-                              />
-                            </motion.div>
-                          )}
-                          {/* PO-A on line (when not on break) */}
-                          {hasPOPair && !poaOnBreak && (
-                            <motion.div
-                              key={`slot-${lane.id}-POA`}
-                              layoutId={`${lane.id}-POA`}
-                              layout
-                              transition={{
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 35,
-                              }}>
-                              <PeopleIcon
-                                variant="poa"
-                                label="PO-A"
-                              />
-                            </motion.div>
-                          )}
                         </AnimatePresence>
                       </div>
                     </div>
@@ -876,40 +835,6 @@ export function AflosSimulator() {
                               />
                             </motion.div>
                           ))}
-                          {/* PO on break */}
-                          {hasPOPair && poOnBreak && (
-                            <motion.div
-                              key={`break-${lane.id}-PO`}
-                              layoutId={`${lane.id}-PO`}
-                              layout
-                              transition={{
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 35,
-                              }}>
-                              <PeopleIcon
-                                variant="po"
-                                label="PO (pauze)"
-                              />
-                            </motion.div>
-                          )}
-                          {/* PO-A on break */}
-                          {hasPOPair && poaOnBreak && (
-                            <motion.div
-                              key={`break-${lane.id}-POA`}
-                              layoutId={`${lane.id}-POA`}
-                              layout
-                              transition={{
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 35,
-                              }}>
-                              <PeopleIcon
-                                variant="poa"
-                                label="PO-A (pauze)"
-                              />
-                            </motion.div>
-                          )}
                         </AnimatePresence>
                       </div>
                     </div>
@@ -932,18 +857,18 @@ export function AflosSimulator() {
                 aflosOnOwnBreak
                   ? "bg-orange-100 text-orange-700"
                   : !aflosOnSite
-                  ? "bg-neutral-100 text-neutral-500"
-                  : t >= OTHER_LINES_START_MINUTE && t < OTHER_LINES_END_MINUTE
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-blue-100 text-blue-700"
+                    ? "bg-neutral-100 text-neutral-500"
+                    : aflosAllocation.otherLines.length > 0
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-blue-100 text-blue-700",
               )}>
               {aflosOnOwnBreak
                 ? "Eigen pauze"
                 : !aflosOnSite
-                ? "Niet gearriveerd"
-                : t >= OTHER_LINES_START_MINUTE && t < OTHER_LINES_END_MINUTE
-                ? "Andere lijnen"
-                : "Beschikbaar"}
+                  ? "Niet gearriveerd"
+                  : aflosAllocation.otherLines.length > 0
+                    ? `Andere lijnen (${aflosAllocation.otherLines.length})`
+                    : "Beschikbaar"}
             </span>
           </div>
 

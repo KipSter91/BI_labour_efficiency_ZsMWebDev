@@ -4,25 +4,21 @@ export function PeopleIcon({
   variant,
   label,
 }: {
-  variant: "worker" | "break" | "aflos" | "po" | "poa";
+  variant: "worker" | "break" | "aflos";
   label?: string;
 }) {
   const colors =
     variant === "aflos"
       ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
       : variant === "break"
-      ? "bg-orange-50 text-orange-700 ring-orange-200"
-      : variant === "po"
-      ? "bg-blue-50 text-blue-700 ring-blue-200"
-      : variant === "poa"
-      ? "bg-violet-50 text-violet-700 ring-violet-200"
-      : "bg-neutral-50 text-neutral-700 ring-neutral-200";
+        ? "bg-orange-50 text-orange-700 ring-orange-200"
+        : "bg-neutral-50 text-neutral-700 ring-neutral-200";
 
   return (
     <div
       className={cn(
         "inline-flex h-9 w-9 items-center justify-center rounded-full ring-1",
-        colors
+        colors,
       )}
       title={label}
       aria-label={label}>
