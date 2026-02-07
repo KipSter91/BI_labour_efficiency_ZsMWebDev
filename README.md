@@ -117,8 +117,8 @@ src/
 | ------------------------------------------------- | --------------------------------------------------- |
 | Interactive staffing overview with line selection | Scenario-based planning with real-time calculations |
 
-| Pause-Aflos Simulator        | Planning Conditions          |
-| ---------------------------- | ---------------------------- |
+| Pause-Aflos Simulator        | Planning Conditions              |
+| ---------------------------- | -------------------------------- |
 | Visual break relief timeline | Planning scenarios affecting FTE |
 
 ---

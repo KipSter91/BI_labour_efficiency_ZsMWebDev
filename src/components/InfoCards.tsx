@@ -47,14 +47,23 @@ function Card({ item }: { item: InfoItem }) {
   );
 }
 
-export function InfoCards({ items }: { items: InfoItem[] }) {
+export function InfoCards({
+  items,
+  gridClassName,
+}: {
+  items: InfoItem[];
+  gridClassName?: string;
+}) {
   const regularItems = items.filter((item) => item.variant !== "summary");
   const summaryItem = items.find((item) => item.variant === "summary");
+  const gridClasses =
+    gridClassName ??
+    "grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Line cards - grouped by lijn */}
-      <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={gridClasses}>
         {regularItems.map((item) => (
           <Card
             key={item.title}

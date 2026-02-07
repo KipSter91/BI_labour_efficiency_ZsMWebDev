@@ -51,7 +51,7 @@ export function TopNav() {
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
         scrolled || mobileOpen
           ? "bg-white/95 shadow-md backdrop-blur-lg"
-          : "bg-transparent"
+          : "bg-transparent",
       )}>
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         {/* Logo */}
@@ -62,7 +62,7 @@ export function TopNav() {
             "flex items-center gap-2 sm:gap-3 rounded-lg px-2 sm:px-3 py-2 transition-all",
             scrolled || mobileOpen
               ? "bg-white shadow-sm ring-1 ring-neutral-200 hover:ring-brand-gold/50"
-              : "bg-white shadow-sm ring-1 ring-neutral-200 hover:ring-brand-gold/50"
+              : "bg-white shadow-sm ring-1 ring-neutral-200 hover:ring-brand-gold/50",
           )}>
           <Image
             src="/logo.svg"
@@ -88,7 +88,7 @@ export function TopNav() {
             "hidden gap-1 rounded-xl p-1 text-sm font-semibold transition-all md:flex",
             scrolled
               ? "bg-neutral-100"
-              : "bg-white/95 shadow-sm ring-1 ring-neutral-200 backdrop-blur"
+              : "bg-white/95 shadow-sm ring-1 ring-neutral-200 backdrop-blur",
           )}>
           {links.map((l) => (
             <button
@@ -111,19 +111,19 @@ export function TopNav() {
             <span
               className={cn(
                 "absolute left-0 h-0.5 w-5 bg-brand-navy rounded-full transition-all duration-300",
-                mobileOpen ? "top-1.5 rotate-45" : "top-0"
+                mobileOpen ? "top-1.5 rotate-45" : "top-0",
               )}
             />
             <span
               className={cn(
                 "absolute left-0 top-1.5 h-0.5 w-5 bg-brand-navy rounded-full transition-all duration-300",
-                mobileOpen ? "opacity-0 scale-0" : "opacity-100"
+                mobileOpen ? "opacity-0 scale-0" : "opacity-100",
               )}
             />
             <span
               className={cn(
                 "absolute left-0 h-0.5 w-5 bg-brand-navy rounded-full transition-all duration-300",
-                mobileOpen ? "top-1.5 -rotate-45" : "top-3"
+                mobileOpen ? "top-1.5 -rotate-45" : "top-3",
               )}
             />
           </div>

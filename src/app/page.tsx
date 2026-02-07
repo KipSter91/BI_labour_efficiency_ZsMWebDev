@@ -28,36 +28,55 @@ export default function Home() {
           id="planning"
           eyebrow="2. Planning omstandigheden"
           title="Planningsregels"
-          description="Bepaalde werkopdrachten vragen extra of minder capaciteit. Overzicht per inpaklijn."
+          description="De planningscondities gelden voor de inpaklijn (inpakoperator + inpakassistent). Overzicht per lijn, met extra of minder FTE."
           variant="gold">
-          <InfoCards
-            items={[
-              {
-                lijn: "Lijn A",
-                title: "8-stuks wafel werkopdracht",
-                subtitle: "Extra capaciteit nodig • Geen pauze-aflos",
-                description:
-                  "Bij 8-stuks wafel werkopdrachten is 1 extra medewerker nodig. Standaard FTE = 3, bij deze orders FTE = 4.",
-                impact: "+1 FTE",
-              },
-              {
-                lijn: "Lijn B",
-                title: "Mini productie",
-                subtitle: "Minder capaciteit nodig • Geen pauze-aflos",
-                description:
-                  "Bij mini producties is de lijn compact en zijn slechts 3 medewerkers voldoende. Dit is de minimale bezetting.",
-                impact: "−3 FTE",
-              },
-              {
-                lijn: "Lijn E",
-                title: "Working with tray",
-                subtitle: "Extra capaciteit nodig • Ombouw specifiek",
-                description:
-                  "Bij werken met tray is 1 extra medewerker nodig. Reguliere productie = 5 FTE, met tray = 6 FTE.",
-                impact: "+1 FTE",
-              },
-            ]}
-          />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-neutral-500">
+                Extra capaciteit (+ FTE)
+              </p>
+              <InfoCards
+                gridClassName="grid gap-3 sm:gap-5 grid-cols-1"
+                items={[
+                  {
+                    lijn: "Lijn A",
+                    title: "8-stuks wafel werkopdracht",
+                    subtitle: "Inpaklijn • Extra capaciteit",
+                    description:
+                      "Bij 8-stuks wafel werkopdrachten is 1 extra medewerker nodig op de inpaklijn. Standaard inpaklijn = 3 FTE, bij deze orders = 4 FTE.",
+                    impact: "+1 FTE",
+                  },
+                  {
+                    lijn: "Lijn E",
+                    title: "Werken met tray",
+                    subtitle: "Inpaklijn • Extra capaciteit",
+                    description:
+                      "Bij werken met tray is 1 extra medewerker nodig op de inpaklijn. Regulier = 5 FTE, met tray = 6 FTE.",
+                    impact: "+1 FTE",
+                  },
+                ]}
+              />
+            </div>
+
+            <div>
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-neutral-500">
+                Minder capaciteit (− FTE)
+              </p>
+              <InfoCards
+                gridClassName="grid gap-3 sm:gap-5 grid-cols-1"
+                items={[
+                  {
+                    lijn: "Lijn B",
+                    title: "Mini productie",
+                    subtitle: "Inpaklijn • Minder capaciteit",
+                    description:
+                      "Bij mini producties is de inpaklijn compacter en zijn slechts 3 medewerkers voldoende. Dit is de minimale bezetting.",
+                    impact: "−3 FTE",
+                  },
+                ]}
+              />
+            </div>
+          </div>
         </Section>
 
         <Section

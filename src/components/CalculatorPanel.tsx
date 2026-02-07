@@ -59,7 +59,7 @@ function Toggle({
     <label
       className={cn(
         "flex items-start gap-3 cursor-pointer group",
-        disabled && "opacity-50 cursor-not-allowed"
+        disabled && "opacity-50 cursor-not-allowed",
       )}>
       <div className="relative mt-0.5">
         <input
@@ -72,13 +72,13 @@ function Toggle({
         <div
           className={cn(
             "h-5 w-9 rounded-full transition-colors",
-            checked ? "bg-brand-gold" : "bg-neutral-300"
+            checked ? "bg-brand-gold" : "bg-neutral-300",
           )}
         />
         <div
           className={cn(
             "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform",
-            checked && "translate-x-4"
+            checked && "translate-x-4",
           )}
         />
       </div>
@@ -91,7 +91,7 @@ function Toggle({
                 "shrink-0 rounded-full px-2 py-0.5 text-xs font-bold",
                 badgeColor === "amber" && "bg-amber-100 text-amber-700",
                 badgeColor === "rose" && "bg-rose-100 text-rose-700",
-                badgeColor === "emerald" && "bg-emerald-100 text-emerald-700"
+                badgeColor === "emerald" && "bg-emerald-100 text-emerald-700",
               )}>
               {badge}
             </span>
@@ -241,10 +241,7 @@ export function CalculatorPanel() {
       bakoperatorExtraLabel: null as string | null,
     },
     {
-      line:
-        state.lijnBType === "mini"
-          ? "Lijn B (mini)"
-          : "Lijn B (normaal)",
+      line: state.lijnBType === "mini" ? "Lijn B (mini)" : "Lijn B (normaal)",
       active: state.lijnB,
       inpak: state.lijnB ? (state.lijnBType === "mini" ? 2 : 4) : 0,
       inpakBase: state.lijnBType === "mini" ? 2 : 4,
@@ -319,7 +316,7 @@ export function CalculatorPanel() {
                 "flex items-center justify-between rounded-lg border px-3 py-2",
                 state.lijnA
                   ? "border-brand-gold/40 bg-brand-gold/5"
-                  : "border-neutral-200"
+                  : "border-neutral-200",
               )}>
               <Toggle
                 checked={state.lijnA}
@@ -353,7 +350,7 @@ export function CalculatorPanel() {
                 "rounded-lg border px-3 py-2",
                 state.lijnB
                   ? "border-brand-gold/40 bg-brand-gold/5"
-                  : "border-neutral-200"
+                  : "border-neutral-200",
               )}>
               <div className="flex items-center justify-between">
                 <Toggle
@@ -407,7 +404,7 @@ export function CalculatorPanel() {
                 "flex items-center justify-between rounded-lg border px-3 py-2",
                 state.lijnC
                   ? "border-brand-gold/40 bg-brand-gold/5"
-                  : "border-neutral-200"
+                  : "border-neutral-200",
               )}>
               <Toggle
                 checked={state.lijnC}
@@ -425,7 +422,7 @@ export function CalculatorPanel() {
                 "flex items-center justify-between rounded-lg border px-3 py-2",
                 state.lijnD
                   ? "border-brand-gold/40 bg-brand-gold/5"
-                  : "border-neutral-200"
+                  : "border-neutral-200",
               )}>
               <Toggle
                 checked={state.lijnD}
@@ -443,7 +440,7 @@ export function CalculatorPanel() {
                 "rounded-lg border px-3 py-2",
                 state.lijnE
                   ? "border-brand-gold/40 bg-brand-gold/5"
-                  : "border-neutral-200"
+                  : "border-neutral-200",
               )}>
               <div className="flex items-center justify-between">
                 <Toggle
@@ -460,7 +457,10 @@ export function CalculatorPanel() {
                       type="checkbox"
                       checked={state.lijnE_tray}
                       onChange={(e) =>
-                        setState((s) => ({ ...s, lijnE_tray: e.target.checked }))
+                        setState((s) => ({
+                          ...s,
+                          lijnE_tray: e.target.checked,
+                        }))
                       }
                       className="h-3.5 w-3.5 accent-brand-gold"
                     />
@@ -471,7 +471,6 @@ export function CalculatorPanel() {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Compact Summary Table */}
