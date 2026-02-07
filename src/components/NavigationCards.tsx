@@ -9,14 +9,24 @@ const cards = [
     description: "Concrete staffing blueprint 2026 (per lijn + functies).",
   },
   {
-    id: "pause-aflos",
-    title: "Pause aflos",
-    description: "Data-driven simulatie met timeline controls (Lijn D & E).",
-  },
-  {
     id: "planning",
     title: "Planning omstandigheden",
     description: "Planning rules die bepalen wanneer FTE kan zakken.",
+  },
+  {
+    id: "calculator",
+    title: "FTE Calculator",
+    description: "Scenario berekening met directe FTE impact.",
+  },
+  {
+    id: "planner",
+    title: "Weekplanner",
+    description: "Bezetting per dag en shift plannen.",
+  },
+  {
+    id: "pause-aflos",
+    title: "Pause aflos",
+    description: "Data-driven simulatie met timeline controls (Lijn D & E).",
   },
 ] as const;
 

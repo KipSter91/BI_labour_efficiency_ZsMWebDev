@@ -14,6 +14,16 @@ const cards = [
     description: "Wanneer FTE wijzigt.",
   },
   {
+    id: "calculator",
+    title: "FTE Calculator",
+    description: "Scenario berekening.",
+  },
+  {
+    id: "planner",
+    title: "Weekplanner",
+    description: "Shiftplanning en bezetting.",
+  },
+  {
     id: "pause-aflos",
     title: "Pauze-aflos",
     description: "Simulatie Lijn D & E.",
@@ -87,7 +97,7 @@ export function HeroSection() {
           <p className="mb-3 sm:mb-4 text-center text-xs font-bold uppercase tracking-widest text-neutral-400">
             Navigeer door de presentatie
           </p>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
             {cards.map((c, idx) => (
               <motion.button
                 key={c.id}

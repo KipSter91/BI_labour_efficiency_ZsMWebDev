@@ -16,8 +16,8 @@ function Card({ item }: { item: InfoItem }) {
         item.variant === "highlight"
           ? "border-brand-gold/40 ring-1 ring-brand-gold/20"
           : item.variant === "summary"
-          ? "border-brand-navy/20 bg-linear-to-br from-brand-navy/5 to-slate-50"
-          : "border-neutral-200 hover:border-brand-gold/30"
+            ? "border-brand-navy/20 bg-linear-to-br from-brand-navy/5 to-slate-50"
+            : "border-neutral-200 hover:border-brand-gold/30"
       }`}>
       {item.impact && (
         <span

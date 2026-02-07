@@ -10,6 +10,7 @@ const links = [
   { id: "blauwprint", label: "Blauwprint" },
   { id: "planning", label: "Planning" },
   { id: "calculator", label: "Calculator" },
+  { id: "planner", label: "Planner" },
   { id: "pause-aflos", label: "Pause aflos" },
 ] as const;
 

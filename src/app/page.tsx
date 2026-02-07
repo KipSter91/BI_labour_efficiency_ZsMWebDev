@@ -4,6 +4,7 @@ import { CalculatorPanel } from "@/components/CalculatorPanel";
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/HeroSection";
 import { InfoCards } from "@/components/InfoCards";
+import { ProductionPlanner } from "@/components/ProductionPlanner";
 import { Section } from "@/components/Section";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { TopNav } from "@/components/TopNav";
@@ -89,8 +90,17 @@ export default function Home() {
         </Section>
 
         <Section
+          id="planner"
+          eyebrow="4. Weekplanner"
+          title="Productieplanner"
+          description="Plan de bezetting per dag en per shift, met ruimte voor afwijkingen en inpaklijn-condities."
+          variant="cream">
+          <ProductionPlanner />
+        </Section>
+
+        <Section
           id="pause-aflos"
-          eyebrow="4. Pauze-aflos systeem"
+          eyebrow="5. Pauze-aflos systeem"
           title="Aflos simulatie"
           description="Interactieve simulatie voor Lijn D & E. 3 aflos medewerkers, 4 uur aanwezig, 30 min eigen pauze."
           variant="white">
