@@ -300,6 +300,15 @@ export const translations = {
     eTrayShort: { nl: "E • tray", en: "E • tray" },
     shiftTotalRow: { nl: "Shift totaal", en: "Shift total" },
     autoFillShift: { nl: "Auto vullen", en: "Auto fill" },
+    remarks: { nl: "Opmerkingen", en: "Remarks" },
+    remark3Lines: {
+      nl: "Let op: 2 deegbereider, 1 stroopbereider, 1 aflos en 1 reserve op planning",
+      en: "Note: 2 dough preparers, 1 syrup preparer, 1 relief worker and 1 reserve on schedule",
+    },
+    remark2Lines: {
+      nl: "Let op: 2 deegbereider, 1 stroopbereider, geen aflos en geen reserve op planning",
+      en: "Note: 2 dough preparers, 1 syrup preparer, no relief worker and no reserve on schedule",
+    },
   },
 
   // Aflos Simulator

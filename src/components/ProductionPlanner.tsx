@@ -185,6 +185,19 @@ export function ProductionPlanner() {
     { key: "asst", label: getText(t.roles.inpakassistent) },
   ];
 
+  // Generate shift remark based on active line count
+  const getShiftRemark = (shiftSettings: ShiftSettings): string | null => {
+    const activeCount = LINES.filter(
+      (l) => shiftSettings.activeLines[l],
+    ).length;
+    if (activeCount === 3) {
+      return getText(t.planner.remark3Lines);
+    } else if (activeCount <= 2 && activeCount > 0) {
+      return getText(t.planner.remark2Lines);
+    }
+    return null;
+  };
+
   const toggleDay = (day: Day) => {
     const willOpen = !expandedDays[day];
     setExpandedDays((prev) => ({ ...prev, [day]: !prev[day] }));
@@ -595,10 +608,42 @@ export function ProductionPlanner() {
         })),
       ];
 
+      // Remarks row (based on active line count per shift)
+      const remarkTexts = SHIFTS.map((shift) => {
+        const remark = getShiftRemark(settings[day][shift]);
+        return remark ?? "–";
+      });
+
+      const remarksRow = [
+        {
+          content: getText(t.planner.remarks),
+          styles: {
+            halign: "left" as const,
+            fontStyle: "bold" as const,
+            fillColor: [255, 247, 230] as [number, number, number],
+            textColor: "#92400e",
+            fontSize: 6.5,
+          },
+        },
+        ...remarkTexts.map((txt) => ({
+          content: txt,
+          colSpan: 3,
+          styles: {
+            halign: "center" as const,
+            fillColor: [255, 247, 230] as [number, number, number],
+            textColor: "#92400e",
+            fontSize: 6.5,
+            fontStyle: (txt === "–" ? "normal" : "italic") as
+              | "normal"
+              | "italic",
+          },
+        })),
+      ];
+
       // Each day block = 22px header bar + 2 header rows (≈16 each) + (LINES+2) body rows (≈16 each) + gap
       const rowHeight = 18;
       const dayBlockHeight =
-        22 + 2 * rowHeight + (LINES.length + 2) * rowHeight + 14;
+        22 + 2 * rowHeight + (LINES.length + 3) * rowHeight + 14;
       const pageHeight = pdf.internal.pageSize.getHeight();
       if (startY + dayBlockHeight > pageHeight - margin) {
         pdf.addPage();
@@ -623,7 +668,7 @@ export function ProductionPlanner() {
         startY,
         margin: { left: margin, right: margin },
         head: [headerRow1, headerRow2],
-        body: [...bodyRows, totalRow, conditionsRow],
+        body: [...bodyRows, totalRow, conditionsRow, remarksRow],
         theme: "grid",
         pageBreak: "avoid",
         rowPageBreak: "avoid",
@@ -929,6 +974,19 @@ export function ProductionPlanner() {
                               {totalsByDayShift[day][shift]}
                             </span>
                           </div>
+
+                          {/* Shift remark based on active line count */}
+                          {(() => {
+                            const remark = getShiftRemark(shiftSettings);
+                            if (!remark) return null;
+                            return (
+                              <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+                                <p className="text-[10px] text-amber-800 leading-relaxed">
+                                  {remark}
+                                </p>
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })}

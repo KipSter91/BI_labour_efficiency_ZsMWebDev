@@ -222,7 +222,7 @@ function AflosTimelineRow({
 }) {
   const { getText } = useLanguage();
   const t = translations;
-  
+
   const pct =
     maxMinute > 0 ? (clamp(nowMinute, 0, maxMinute) / maxMinute) * 100 : 0;
 
@@ -294,7 +294,15 @@ function AflosTimelineRow({
         tone: "neutral" as const,
       },
     ].filter((b) => b.durationMinutes > 0);
-  }, [maxMinute, labelOffsite, labelOnLines, labelOwnBreak, labelOtherLines, labelBreak, labelOther]);
+  }, [
+    maxMinute,
+    labelOffsite,
+    labelOnLines,
+    labelOwnBreak,
+    labelOtherLines,
+    labelBreak,
+    labelOther,
+  ]);
 
   return (
     <div className="grid gap-1.5 sm:gap-2">
@@ -365,7 +373,7 @@ function AflosTimelineRow({
 export function AflosSimulator() {
   const { getText } = useLanguage();
   const t = translations;
-  
+
   const getShiftLabel = (id: ShiftId): string => {
     const shiftMap: Record<ShiftId, { nl: string; en: string }> = {
       ochtend: t.shifts.Ochtend,
@@ -403,10 +411,13 @@ export function AflosSimulator() {
   }, [currentT]);
 
   const totalAflos = aflosSchedule.aflosTeam.count;
-  const aflosOnSite = currentT >= AFLOS_ARRIVAL_MINUTE && currentT < END_OF_SHIFT_MINUTE;
+  const aflosOnSite =
+    currentT >= AFLOS_ARRIVAL_MINUTE && currentT < END_OF_SHIFT_MINUTE;
   const aflosBreakEnd = AFLOS_BREAK_START_MINUTE + AFLOS_BREAK_DURATION;
   const aflosOnOwnBreak =
-    aflosOnSite && currentT >= AFLOS_BREAK_START_MINUTE && currentT < aflosBreakEnd;
+    aflosOnSite &&
+    currentT >= AFLOS_BREAK_START_MINUTE &&
+    currentT < aflosBreakEnd;
   const aflosAvailableNow = aflosOnSite && !aflosOnOwnBreak;
   const maxAflosAvailable = aflosAvailableNow ? totalAflos : 0;
 
@@ -497,7 +508,10 @@ export function AflosSimulator() {
                       ? "bg-brand-gold text-white shadow-sm"
                       : "text-neutral-600 hover:bg-white hover:text-neutral-800",
                   )}>
-                  {getShiftLabel(id).slice(0, 3)}
+                  <span className="sm:hidden">
+                    {getShiftLabel(id).slice(0, 3)}
+                  </span>
+                  <span className="hidden sm:inline">{getShiftLabel(id)}</span>
                 </button>
               ))}
             </div>
