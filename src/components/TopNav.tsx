@@ -17,7 +17,6 @@ export function TopNav() {
     { id: "planning", label: getText(t.topNav.planning) },
     { id: "calculator", label: getText(t.topNav.calculator) },
     { id: "planner", label: getText(t.topNav.planner) },
-    { id: "pause-aflos", label: getText(t.topNav.pauseAflos) },
   ];
 
   useEffect(() => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { BlueprintTables } from "@/components/BlueprintTables";
-import { AflosSimulator } from "@/components/AflosSimulator";
 import { CalculatorPanel } from "@/components/CalculatorPanel";
 import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/HeroSection";
@@ -54,6 +53,26 @@ export default function Home() {
                     impact: "+1 FTE",
                   },
                   {
+                    lijn: `${getText(t.common.line)} B`,
+                    title: getText(t.planningRules.lijnBMeli.title),
+                    subtitle: getText(t.planningRules.lijnBMeli.subtitle),
+                    description: getText(t.planningRules.lijnBMeli.description),
+                    impact: "+1 FTE",
+                  },
+                  {
+                    lijn: `${getText(t.common.line)} C`,
+                    title: getText(
+                      t.planningRules.lijnCAldenteBakkerJoop.title,
+                    ),
+                    subtitle: getText(
+                      t.planningRules.lijnCAldenteBakkerJoop.subtitle,
+                    ),
+                    description: getText(
+                      t.planningRules.lijnCAldenteBakkerJoop.description,
+                    ),
+                    impact: "+1 FTE",
+                  },
+                  {
                     lijn: `${getText(t.common.line)} E`,
                     title: getText(t.planningRules.lijnETray.title),
                     subtitle: getText(t.planningRules.lijnETray.subtitle),
@@ -76,7 +95,7 @@ export default function Home() {
                     title: getText(t.planningRules.lijnBMini.title),
                     subtitle: getText(t.planningRules.lijnBMini.subtitle),
                     description: getText(t.planningRules.lijnBMini.description),
-                    impact: "−3 FTE",
+                    impact: "−2 FTE",
                   },
                 ]}
               />
@@ -100,15 +119,6 @@ export default function Home() {
           description={getText(t.sections.planner.description)}
           variant="cream">
           <ProductionPlanner />
-        </Section>
-
-        <Section
-          id="pause-aflos"
-          eyebrow={getText(t.sections.pauseAflos.eyebrow)}
-          title={getText(t.sections.pauseAflos.title)}
-          description={getText(t.sections.pauseAflos.description)}
-          variant="white">
-          <AflosSimulator />
         </Section>
       </main>
       <Footer />

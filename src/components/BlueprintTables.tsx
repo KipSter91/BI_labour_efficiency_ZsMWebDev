@@ -17,8 +17,8 @@ const inpakLinesData = [
     bakoperator: 2,
   },
   { lineKey: "C", key: "C", inpak: 2, operator: 1, bakoperator: 1 },
-  { lineKey: "D", key: "D", inpak: 2, operator: 1, bakoperator: 2 },
-  { lineKey: "E", key: "E", inpak: 4, operator: 1, bakoperator: 2 },
+  { lineKey: "D", key: "D", inpak: 3, operator: 1, bakoperator: 2 },
+  { lineKey: "E", key: "E", inpak: 4, operator: 1, bakoperator: 1 },
 ];
 
 // Computed with totals
@@ -34,8 +34,6 @@ const otherRolesKeys = [
   { key: "kruimelaar", fte: 1 },
   { key: "schoonmaak", fte: 1 },
   { key: "td", fte: 2 },
-  { key: "reserve", fte: 3 },
-  { key: "aflosser", fte: 3 },
 ] as const;
 
 const otherTotal = otherRolesKeys.reduce((sum, row) => sum + row.fte, 0);
@@ -109,8 +107,6 @@ export function BlueprintTables() {
         short: t.otherRoles.schoonmaakShort,
       },
       td: { full: t.otherRoles.td, short: t.otherRoles.td },
-      reserve: { full: t.otherRoles.reserve, short: t.otherRoles.reserve },
-      aflosser: { full: t.otherRoles.aflosser, short: t.otherRoles.aflosser },
     };
     return (
       roleMap[key] ?? {

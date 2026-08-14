@@ -23,11 +23,6 @@ const cards = [
     title: "Weekplanner",
     description: "Bezetting per dag en shift plannen.",
   },
-  {
-    id: "pause-aflos",
-    title: "Pause aflos",
-    description: "Data-driven simulatie met timeline controls (Lijn D & E).",
-  },
 ] as const;
 
 export function NavigationCards() {

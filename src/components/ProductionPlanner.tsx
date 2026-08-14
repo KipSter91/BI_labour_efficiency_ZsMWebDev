@@ -16,6 +16,8 @@ type ShiftSettings = {
   activeLines: Record<LineKey, boolean>;
   bType: BLijnType;
   a8stuks: boolean;
+  bMeli: boolean;
+  cAldenteBakkerJoop: boolean;
   eTray: boolean;
 };
 
@@ -32,13 +34,19 @@ const LINES: LineKey[] = ["A", "B", "C", "D", "E"];
 
 const STORAGE_KEY = "labeff_weekplanner_v1";
 
-function getNextWeekInfo() {
+type WeekOffset = "current" | "next";
+
+function getWeekInfo(offset: WeekOffset) {
   const now = new Date();
-  // Find next Monday
+  // Find Monday of the current week
   const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
-  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-  const nextMonday = new Date(now);
-  nextMonday.setDate(now.getDate() + daysUntilMonday);
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - daysSinceMonday);
+  if (offset === "next") {
+    monday.setDate(monday.getDate() + 7);
+  }
+  const nextMonday = monday;
 
   // ISO 8601 week number
   const target = new Date(nextMonday.getTime());
@@ -109,6 +117,8 @@ function createDefaultSettings(): PlannerSettings {
           ),
           bType: "normaal",
           a8stuks: false,
+          bMeli: false,
+          cAldenteBakkerJoop: false,
           eTray: false,
         };
         return accShift;
@@ -124,51 +134,61 @@ function getBlueprint(line: LineKey, bType: BLijnType) {
     A: { bak: 1, op: 1, asst: 2 },
     B: { bak: 2, op: 1, asst: bType === "mini" ? 2 : 4 },
     C: { bak: 1, op: 1, asst: 2 },
-    D: { bak: 2, op: 1, asst: 2 },
-    E: { bak: 2, op: 1, asst: 4 },
+    D: { bak: 2, op: 1, asst: 3 },
+    E: { bak: 1, op: 1, asst: 4 },
   } as const;
   return base[line];
 }
 
-function getInitialPlannerState() {
-  if (typeof window === "undefined") {
-    return {
-      data: createEmptyData(),
-      settings: createDefaultSettings(),
-    };
-  }
+type WeekBucket = { data: PlannerData; settings: PlannerSettings };
+type WeekStorage = Record<string, WeekBucket>;
+
+function getWeekId(offset: WeekOffset) {
+  const info = getWeekInfo(offset);
+  return `${info.year}-W${info.weekNumber}`;
+}
+
+function createEmptyBucket(): WeekBucket {
+  return { data: createEmptyData(), settings: createDefaultSettings() };
+}
+
+function loadWeekStorage(): WeekStorage {
+  if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {
-        data: createEmptyData(),
-        settings: createDefaultSettings(),
-      };
-    }
+    if (!raw) return {};
     const parsed = JSON.parse(raw) as {
-      data: PlannerData;
-      settings: PlannerSettings;
+      weeks?: WeekStorage;
+      data?: PlannerData;
+      settings?: PlannerSettings;
     };
+    if (parsed?.weeks) return parsed.weeks;
+    // Migrate legacy single-week format (was shared across all weeks)
     if (parsed?.data && parsed?.settings) {
-      return { data: parsed.data, settings: parsed.settings };
+      return {
+        [getWeekId("next")]: { data: parsed.data, settings: parsed.settings },
+      };
     }
   } catch {
     // ignore
   }
-  return {
-    data: createEmptyData(),
-    settings: createDefaultSettings(),
-  };
+  return {};
 }
 
 export function ProductionPlanner() {
   const { getText, t, language } = useLanguage();
-  const initial = getInitialPlannerState();
-  const [data, setData] = useState<PlannerData>(initial.data);
-  const [settings, setSettings] = useState<PlannerSettings>(initial.settings);
+  const [weekOffset, setWeekOffset] = useState<WeekOffset>("next");
+  const selectedWeek = useMemo(() => getWeekInfo(weekOffset), [weekOffset]);
+  const weekId = `${selectedWeek.year}-W${selectedWeek.weekNumber}`;
+  const weekStorageRef = useRef<WeekStorage>(loadWeekStorage());
+  const initialBucket = weekStorageRef.current[weekId] ?? createEmptyBucket();
+  const [data, setData] = useState<PlannerData>(initialBucket.data);
+  const [settings, setSettings] = useState<PlannerSettings>(
+    initialBucket.settings,
+  );
+  const prevWeekIdRef = useRef(weekId);
   const plannerRef = useRef<HTMLDivElement | null>(null);
   const dayRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const nextWeek = useMemo(() => getNextWeekInfo(), []);
   const [expandedDays, setExpandedDays] = useState<Record<Day, boolean>>(() =>
     DAYS.reduce(
       (acc, day) => ({ ...acc, [day]: false }),
@@ -185,15 +205,13 @@ export function ProductionPlanner() {
     { key: "asst", label: getText(t.roles.inpakassistent) },
   ];
 
-  // Generate shift remark based on active line count
+  // Note: with 3 or fewer active lines, 2 dough preparers + 1 syrup preparer are still needed
   const getShiftRemark = (shiftSettings: ShiftSettings): string | null => {
     const activeCount = LINES.filter(
       (l) => shiftSettings.activeLines[l],
     ).length;
-    if (activeCount === 3) {
-      return getText(t.planner.remark3Lines);
-    } else if (activeCount <= 2 && activeCount > 0) {
-      return getText(t.planner.remark2Lines);
+    if (activeCount > 0 && activeCount <= 3) {
+      return getText(t.planner.remarkFewerLines);
     }
     return null;
   };
@@ -248,12 +266,30 @@ export function ProductionPlanner() {
     });
   };
 
+  // Switching week: stash the outgoing week's data, load (or init) the incoming week's bucket
   useEffect(() => {
+    if (prevWeekIdRef.current === weekId) return;
+    weekStorageRef.current[prevWeekIdRef.current] = { data, settings };
+    const bucket = weekStorageRef.current[weekId] ?? createEmptyBucket();
+    setData(bucket.data);
+    setSettings(bucket.settings);
+    prevWeekIdRef.current = weekId;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekId]);
+
+  useEffect(() => {
+    weekStorageRef.current[weekId] = { data, settings };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data, settings }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ weeks: weekStorageRef.current }),
+      );
     } catch {
       // ignore
     }
+    // Deliberately excludes weekId: a week switch is persisted by the effect above,
+    // not here, to avoid saving stale data under the newly selected week's id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, settings]);
 
   const updateCell = (
@@ -294,6 +330,12 @@ export function ProductionPlanner() {
           const base = getBlueprint(line, nextSettings.bType);
           const asstExtra =
             (line === "A" && nextSettings.a8stuks ? 1 : 0) +
+            (line === "B" &&
+            nextSettings.bType === "normaal" &&
+            nextSettings.bMeli
+              ? 1
+              : 0) +
+            (line === "C" && nextSettings.cAldenteBakkerJoop ? 1 : 0) +
             (line === "E" && nextSettings.eTray ? 1 : 0);
           acc[line] = {
             bak: base.bak,
@@ -331,23 +373,45 @@ export function ProductionPlanner() {
       const conditionsChanged =
         prevShift.a8stuks !== nextShift.a8stuks ||
         prevShift.bType !== nextShift.bType ||
+        prevShift.bMeli !== nextShift.bMeli ||
+        prevShift.cAldenteBakkerJoop !== nextShift.cAldenteBakkerJoop ||
         prevShift.eTray !== nextShift.eTray;
 
       if (activeLinesChanged) {
-        // Only zero out deactivated lines
-        LINES.forEach((line) => {
-          if (prevShift.activeLines[line] && !nextShift.activeLines[line]) {
-            setData((d) => ({
-              ...d,
-              [day]: {
-                ...d[day],
-                [shift]: {
-                  ...d[day][shift],
-                  [line]: { bak: 0, op: 0, asst: 0 },
-                },
-              },
-            }));
-          }
+        setData((d) => {
+          const updated = { ...d[day][shift] };
+          LINES.forEach((line) => {
+            const wasActive = prevShift.activeLines[line];
+            const isActive = nextShift.activeLines[line];
+            if (wasActive && !isActive) {
+              // Deactivated: zero out
+              updated[line] = { bak: 0, op: 0, asst: 0 };
+            } else if (!wasActive && isActive) {
+              // Reactivated: refill with blueprint values
+              const base = getBlueprint(line, nextShift.bType);
+              const asstExtra =
+                (line === "A" && nextShift.a8stuks ? 1 : 0) +
+                (line === "B" &&
+                nextShift.bType === "normaal" &&
+                nextShift.bMeli
+                  ? 1
+                  : 0) +
+                (line === "C" && nextShift.cAldenteBakkerJoop ? 1 : 0) +
+                (line === "E" && nextShift.eTray ? 1 : 0);
+              updated[line] = {
+                bak: base.bak,
+                op: base.op,
+                asst: base.asst + asstExtra,
+              };
+            }
+          });
+          return {
+            ...d,
+            [day]: {
+              ...d[day],
+              [shift]: updated,
+            },
+          };
         });
       }
 
@@ -360,6 +424,10 @@ export function ProductionPlanner() {
             const base = getBlueprint(line, nextShift.bType);
             const asstExtra =
               (line === "A" && nextShift.a8stuks ? 1 : 0) +
+              (line === "B" && nextShift.bType === "normaal" && nextShift.bMeli
+                ? 1
+                : 0) +
+              (line === "C" && nextShift.cAldenteBakkerJoop ? 1 : 0) +
               (line === "E" && nextShift.eTray ? 1 : 0);
             updated[line] = {
               bak: base.bak,
@@ -425,6 +493,8 @@ export function ProductionPlanner() {
           ),
           bType: "normaal" as BLijnType,
           a8stuks: false,
+          bMeli: false,
+          cAldenteBakkerJoop: false,
           eTray: false,
         },
       },
@@ -453,7 +523,7 @@ export function ProductionPlanner() {
     pdf.setFontSize(16);
     pdf.setTextColor(navy);
     pdf.text(
-      `${pdfTitle} – ${getText(t.common.week)} ${nextWeek.weekNumber} (${nextWeek.dates["Maandag"]} – ${nextWeek.dates["Vrijdag"]} ${nextWeek.year})`,
+      `${pdfTitle} – ${getText(t.common.week)} ${selectedWeek.weekNumber} (${selectedWeek.dates["Maandag"]} – ${selectedWeek.dates["Vrijdag"]} ${selectedWeek.year})`,
       margin,
       margin + 4,
     );
@@ -576,9 +646,14 @@ export function ProductionPlanner() {
         if (inactiveLines.length > 0) {
           tags.push(`${getText(t.planner.off)}: ${inactiveLines.join(", ")}`);
         }
-        if (s.a8stuks) tags.push(getText(t.planner.a8stuks));
-        if (s.bType === "mini") tags.push(getText(t.planner.bMini));
-        if (s.eTray) tags.push(getText(t.planner.eTray));
+        if (s.activeLines.A && s.a8stuks) tags.push(getText(t.planner.a8stuks));
+        if (s.activeLines.B && s.bType === "mini")
+          tags.push(getText(t.planner.bMini));
+        if (s.activeLines.B && s.bType === "normaal" && s.bMeli)
+          tags.push(getText(t.planner.bMeli));
+        if (s.activeLines.C && s.cAldenteBakkerJoop)
+          tags.push(getText(t.planner.cAldenteBakkerJoop));
+        if (s.activeLines.E && s.eTray) tags.push(getText(t.planner.eTray));
         return tags.length > 0 ? tags.join("  •  ") : "–";
       });
 
@@ -657,7 +732,7 @@ export function ProductionPlanner() {
       pdf.setFontSize(11);
       pdf.setTextColor(navy);
       pdf.text(
-        `${getDayName(day)}  –  ${nextWeek.dates[day]}`,
+        `${getDayName(day)}  –  ${selectedWeek.dates[day]}`,
         margin + 8,
         startY + 13,
       );
@@ -706,7 +781,7 @@ export function ProductionPlanner() {
     });
 
     pdf.save(
-      `weekplanner_week${nextWeek.weekNumber}_${nextWeek.dates["Maandag"].replace(" ", "-")}_${nextWeek.dates["Vrijdag"].replace(" ", "-")}_${nextWeek.year}.pdf`,
+      `weekplanner_week${selectedWeek.weekNumber}_${selectedWeek.dates["Maandag"].replace(" ", "-")}_${selectedWeek.dates["Vrijdag"].replace(" ", "-")}_${selectedWeek.year}.pdf`,
     );
   };
 
@@ -766,13 +841,35 @@ export function ProductionPlanner() {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 py-2.5">
+        <div className="flex overflow-hidden rounded-lg border border-brand-navy/20">
+          <button
+            type="button"
+            onClick={() => setWeekOffset("current")}
+            className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+              weekOffset === "current"
+                ? "bg-brand-navy text-white"
+                : "bg-white text-neutral-600 hover:bg-neutral-50"
+            }`}>
+            {getText(t.planner.currentWeekOption)}
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeekOffset("next")}
+            className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+              weekOffset === "next"
+                ? "bg-brand-navy text-white"
+                : "bg-white text-neutral-600 hover:bg-neutral-50"
+            }`}>
+            {getText(t.planner.nextWeekOption)}
+          </button>
+        </div>
         <span className="rounded-lg bg-brand-navy px-3 py-1 text-sm font-bold text-white">
-          {getText(t.planner.nextWeek)} {nextWeek.weekNumber}
+          {getText(t.planner.nextWeek)} {selectedWeek.weekNumber}
         </span>
         <span className="text-sm font-medium text-brand-navy">
-          {nextWeek.dates["Maandag"]} – {nextWeek.dates["Vrijdag"]}{" "}
-          {nextWeek.year}
+          {selectedWeek.dates["Maandag"]} – {selectedWeek.dates["Vrijdag"]}{" "}
+          {selectedWeek.year}
         </span>
       </div>
 
@@ -795,7 +892,7 @@ export function ProductionPlanner() {
               <h3 className="text-sm sm:text-base font-bold text-brand-navy">
                 {getDayName(day)}{" "}
                 <span className="text-xs sm:text-sm font-normal text-brand-navy/60">
-                  {nextWeek.dates[day]}
+                  {selectedWeek.dates[day]}
                 </span>
               </h3>
               <div className="flex items-center gap-2">
@@ -913,56 +1010,106 @@ export function ProductionPlanner() {
                               {getText(t.calculator.conditions)}
                             </p>
                             <div className="mt-1 flex flex-wrap gap-2 text-[10px]">
-                              <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
-                                <input
-                                  type="checkbox"
-                                  checked={shiftSettings.a8stuks}
-                                  onChange={(e) =>
-                                    updateShiftSettings(day, shift, (s) => ({
-                                      ...s,
-                                      a8stuks: e.target.checked,
-                                    }))
-                                  }
-                                  className="h-3 w-3 accent-brand-gold"
-                                />
-                                <span className="text-neutral-600">
-                                  {getText(t.planner.a8stuksShort)}
-                                </span>
-                              </label>
-                              <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
-                                <input
-                                  type="checkbox"
-                                  checked={shiftSettings.bType === "mini"}
-                                  onChange={(e) =>
-                                    updateShiftSettings(day, shift, (s) => ({
-                                      ...s,
-                                      bType: e.target.checked
-                                        ? "mini"
-                                        : "normaal",
-                                    }))
-                                  }
-                                  className="h-3 w-3 accent-brand-gold"
-                                />
-                                <span className="text-neutral-600">
-                                  {getText(t.planner.bMiniShort)}
-                                </span>
-                              </label>
-                              <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
-                                <input
-                                  type="checkbox"
-                                  checked={shiftSettings.eTray}
-                                  onChange={(e) =>
-                                    updateShiftSettings(day, shift, (s) => ({
-                                      ...s,
-                                      eTray: e.target.checked,
-                                    }))
-                                  }
-                                  className="h-3 w-3 accent-brand-gold"
-                                />
-                                <span className="text-neutral-600">
-                                  {getText(t.planner.eTrayShort)}
-                                </span>
-                              </label>
+                              {shiftSettings.activeLines.A && (
+                                <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
+                                  <input
+                                    type="checkbox"
+                                    checked={shiftSettings.a8stuks}
+                                    onChange={(e) =>
+                                      updateShiftSettings(day, shift, (s) => ({
+                                        ...s,
+                                        a8stuks: e.target.checked,
+                                      }))
+                                    }
+                                    className="h-3 w-3 accent-brand-gold"
+                                  />
+                                  <span className="text-neutral-600">
+                                    {getText(t.planner.a8stuksShort)}
+                                  </span>
+                                </label>
+                              )}
+                              {shiftSettings.activeLines.B && (
+                                <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
+                                  <input
+                                    type="checkbox"
+                                    checked={shiftSettings.bType === "mini"}
+                                    onChange={(e) =>
+                                      updateShiftSettings(day, shift, (s) => ({
+                                        ...s,
+                                        bType: e.target.checked
+                                          ? "mini"
+                                          : "normaal",
+                                        bMeli: e.target.checked
+                                          ? false
+                                          : s.bMeli,
+                                      }))
+                                    }
+                                    className="h-3 w-3 accent-brand-gold"
+                                  />
+                                  <span className="text-neutral-600">
+                                    {getText(t.planner.bMiniShort)}
+                                  </span>
+                                </label>
+                              )}
+                              {shiftSettings.activeLines.B &&
+                                shiftSettings.bType === "normaal" && (
+                                  <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
+                                    <input
+                                      type="checkbox"
+                                      checked={shiftSettings.bMeli}
+                                      onChange={(e) =>
+                                        updateShiftSettings(
+                                          day,
+                                          shift,
+                                          (s) => ({
+                                            ...s,
+                                            bMeli: e.target.checked,
+                                          }),
+                                        )
+                                      }
+                                      className="h-3 w-3 accent-brand-gold"
+                                    />
+                                    <span className="text-neutral-600">
+                                      {getText(t.planner.bMeliShort)}
+                                    </span>
+                                  </label>
+                                )}
+                              {shiftSettings.activeLines.C && (
+                                <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
+                                  <input
+                                    type="checkbox"
+                                    checked={shiftSettings.cAldenteBakkerJoop}
+                                    onChange={(e) =>
+                                      updateShiftSettings(day, shift, (s) => ({
+                                        ...s,
+                                        cAldenteBakkerJoop: e.target.checked,
+                                      }))
+                                    }
+                                    className="h-3 w-3 accent-brand-gold"
+                                  />
+                                  <span className="text-neutral-600">
+                                    {getText(t.planner.cAldenteBakkerJoopShort)}
+                                  </span>
+                                </label>
+                              )}
+                              {shiftSettings.activeLines.E && (
+                                <label className="flex items-center gap-1 rounded-md bg-white px-2 py-1 border border-neutral-200">
+                                  <input
+                                    type="checkbox"
+                                    checked={shiftSettings.eTray}
+                                    onChange={(e) =>
+                                      updateShiftSettings(day, shift, (s) => ({
+                                        ...s,
+                                        eTray: e.target.checked,
+                                      }))
+                                    }
+                                    className="h-3 w-3 accent-brand-gold"
+                                  />
+                                  <span className="text-neutral-600">
+                                    {getText(t.planner.eTrayShort)}
+                                  </span>
+                                </label>
+                              )}
                             </div>
                           </div>
 

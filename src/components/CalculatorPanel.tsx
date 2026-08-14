@@ -36,7 +36,9 @@ type State = {
 
   // Planning scenarios (inpaklijn)
   lijnA_8stuks: boolean; // +1 FTE inpak
-  lijnE_tray: boolean; // +1 FTE inpak (working with tray)
+  lijnB_meli: boolean; // +1 FTE inpak (Meli work order, normal type only)
+  lijnC_aldenteBakkerJoop: boolean; // +1 FTE inpak (Aldente/Bakker Joop work order)
+  lijnE_tray: boolean; // +1 FTE inpak (working with tray or Bjorg Bio-product)
 };
 
 function Toggle({
@@ -119,6 +121,8 @@ export function CalculatorPanel() {
 
     // Planning: standaard geen speciale scenarios
     lijnA_8stuks: false,
+    lijnB_meli: false,
+    lijnC_aldenteBakkerJoop: false,
     lijnE_tray: false,
   });
 
@@ -136,12 +140,15 @@ export function CalculatorPanel() {
       return { base: 3, planning: 0, tech: 0, total: 3 }; // mini: inpak 2 + operator 1
     }
     const base = 5; // normaal: inpak 4 + operator 1
-    return { base, planning: 0, tech: 0, total: base };
+    const planning = state.lijnB_meli ? 1 : 0; // Meli work order
+    return { base, planning, tech: 0, total: base + planning };
   };
 
   const calcInpakC = () => {
     if (!state.lijnC) return { base: 0, planning: 0, tech: 0, total: 0 };
-    return { base: 3, planning: 0, tech: 0, total: 3 }; // inpak 2 + operator 1
+    const base = 3; // inpak 2 + operator 1
+    const planning = state.lijnC_aldenteBakkerJoop ? 1 : 0; // Aldente/Bakker Joop work order
+    return { base, planning, tech: 0, total: base + planning };
   };
 
   const calcInpakD = () => {
@@ -259,10 +266,17 @@ export function CalculatorPanel() {
       lineKey: "B",
       line: getLineName("B", state.lijnBType),
       active: state.lijnB,
-      inpak: state.lijnB ? (state.lijnBType === "mini" ? 2 : 4) : 0,
+      inpak: state.lijnB
+        ? state.lijnBType === "mini"
+          ? 2
+          : 4 + (state.lijnB_meli ? 1 : 0)
+        : 0,
       inpakBase: state.lijnBType === "mini" ? 2 : 4,
-      inpakExtra: 0,
-      inpakExtraLabel: null as string | null,
+      inpakExtra: state.lijnBType === "normal" && state.lijnB_meli ? 1 : 0,
+      inpakExtraLabel:
+        state.lijnBType === "normal" && state.lijnB_meli
+          ? getText(t.calculator.meli)
+          : null,
       operator: state.lijnB ? 1 : 0,
       bakoperator: state.lijnB ? 2 : 0,
       bakoperatorBase: 2,
@@ -273,10 +287,12 @@ export function CalculatorPanel() {
       lineKey: "C",
       line: getLineName("C", ""),
       active: state.lijnC,
-      inpak: state.lijnC ? 2 : 0,
+      inpak: state.lijnC ? 2 + (state.lijnC_aldenteBakkerJoop ? 1 : 0) : 0,
       inpakBase: 2,
-      inpakExtra: 0,
-      inpakExtraLabel: null as string | null,
+      inpakExtra: state.lijnC_aldenteBakkerJoop ? 1 : 0,
+      inpakExtraLabel: state.lijnC_aldenteBakkerJoop
+        ? getText(t.calculator.aldenteBakkerJoop)
+        : null,
       operator: state.lijnC ? 1 : 0,
       bakoperator: state.lijnC ? 1 : 0,
       bakoperatorBase: 1,
@@ -287,8 +303,8 @@ export function CalculatorPanel() {
       lineKey: "D",
       line: getLineName("D", ""),
       active: state.lijnD,
-      inpak: state.lijnD ? 2 : 0,
-      inpakBase: 2,
+      inpak: state.lijnD ? 3 : 0,
+      inpakBase: 3,
       inpakExtra: 0,
       inpakExtraLabel: null as string | null,
       operator: state.lijnD ? 1 : 0,
@@ -306,8 +322,8 @@ export function CalculatorPanel() {
       inpakExtra: state.lijnE_tray ? 1 : 0,
       inpakExtraLabel: state.lijnE_tray ? getText(t.calculator.tray) : null,
       operator: state.lijnE ? 1 : 0,
-      bakoperator: state.lijnE ? 2 : 0,
-      bakoperatorBase: 2,
+      bakoperator: state.lijnE ? 1 : 0,
+      bakoperatorBase: 1,
       bakoperatorExtra: 0,
       bakoperatorExtraLabel: null as string | null,
     },
@@ -358,7 +374,9 @@ export function CalculatorPanel() {
                     }
                     className="h-3.5 w-3.5 accent-brand-gold"
                   />
-                  <span className="text-neutral-600">8-stuks</span>
+                  <span className="text-neutral-600">
+                    {getText(t.calculator.stuks8)}
+                  </span>
                 </label>
               )}
             </div>
@@ -381,7 +399,25 @@ export function CalculatorPanel() {
                   }
                 />
                 {state.lijnB && (
-                  <div className="flex gap-2 text-xs">
+                  <div className="flex items-center gap-2 text-xs">
+                    {state.lijnBType === "normal" && (
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={state.lijnB_meli}
+                          onChange={(e) =>
+                            setState((s) => ({
+                              ...s,
+                              lijnB_meli: e.target.checked,
+                            }))
+                          }
+                          className="h-3.5 w-3.5 accent-brand-gold"
+                        />
+                        <span className="text-neutral-600">
+                          {getText(t.calculator.meli)} +1
+                        </span>
+                      </label>
+                    )}
                     <label className="flex items-center gap-1 cursor-pointer">
                       <input
                         type="radio"
@@ -406,6 +442,7 @@ export function CalculatorPanel() {
                           setState((s) => ({
                             ...s,
                             lijnBType: "mini",
+                            lijnB_meli: false,
                           }))
                         }
                         className="h-3 w-3 accent-brand-gold"
@@ -420,19 +457,39 @@ export function CalculatorPanel() {
             {/* Lijn C */}
             <div
               className={cn(
-                "flex items-center justify-between rounded-lg border px-3 py-2",
+                "rounded-lg border px-3 py-2",
                 state.lijnC
                   ? "border-brand-gold/40 bg-brand-gold/5"
                   : "border-neutral-200",
               )}>
-              <Toggle
-                checked={state.lijnC}
-                onChange={(v) => setState((s) => ({ ...s, lijnC: v }))}
-                label="C"
-                badge={
-                  state.lijnC ? `${inpakC.total + baklijnC.total}` : undefined
-                }
-              />
+              <div className="flex items-center justify-between">
+                <Toggle
+                  checked={state.lijnC}
+                  onChange={(v) => setState((s) => ({ ...s, lijnC: v }))}
+                  label="C"
+                  badge={
+                    state.lijnC ? `${inpakC.total + baklijnC.total}` : undefined
+                  }
+                />
+                {state.lijnC && (
+                  <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={state.lijnC_aldenteBakkerJoop}
+                      onChange={(e) =>
+                        setState((s) => ({
+                          ...s,
+                          lijnC_aldenteBakkerJoop: e.target.checked,
+                        }))
+                      }
+                      className="h-3.5 w-3.5 accent-brand-gold"
+                    />
+                    <span className="text-neutral-600">
+                      {getText(t.calculator.aldenteBakkerJoop)} +1
+                    </span>
+                  </label>
+                )}
+              </div>
             </div>
 
             {/* Lijn D */}

@@ -74,7 +74,6 @@ export const translations = {
     planning: { nl: "Planning", en: "Planning" },
     calculator: { nl: "Calculator", en: "Calculator" },
     planner: { nl: "Planner", en: "Planner" },
-    pauseAflos: { nl: "Pauze-aflos", en: "Break Relief" },
   },
 
   // Hero Section
@@ -82,8 +81,8 @@ export const translations = {
     titleLine1: { nl: "Van blauwprint naar", en: "From blueprint to" },
     titleLine2: { nl: "werkvloer beslissingen", en: "shop floor decisions" },
     subtitle: {
-      nl: "Blauwprint ≠ realiteit: FTE beweegt mee met planningcondities en pause-aflos coverage.",
-      en: "Blueprint ≠ reality: FTE moves with planning conditions and break-relief coverage.",
+      nl: "Blauwprint ≠ realiteit: FTE beweegt mee met planningcondities.",
+      en: "Blueprint ≠ reality: FTE moves with planning conditions.",
     },
     ctaButton: { nl: "Open FTE Calculator", en: "Open FTE Calculator" },
     navigatePres: {
@@ -114,13 +113,6 @@ export const translations = {
       description: {
         nl: "Shiftplanning en bezetting.",
         en: "Shift planning and staffing.",
-      },
-    },
-    pauzeAflos: {
-      title: { nl: "Pauze-aflos", en: "Break Relief" },
-      description: {
-        nl: "Simulatie Lijn D & E.",
-        en: "Simulation Line D & E.",
       },
     },
   },
@@ -162,14 +154,6 @@ export const translations = {
         en: "Plan staffing per day and shift, with room for deviations and packing line conditions.",
       },
     },
-    pauseAflos: {
-      eyebrow: { nl: "5. Pauze-aflos systeem", en: "5. Break Relief System" },
-      title: { nl: "Aflos simulatie", en: "Relief Simulation" },
-      description: {
-        nl: "Interactieve simulatie voor Lijn D & E. 3 aflos medewerkers, 4 uur aanwezig, 30 min eigen pauze.",
-        en: "Interactive simulation for Line D & E. 3 relief workers, 4 hours present, 30 min own break.",
-      },
-    },
   },
 
   // Blueprint Tables
@@ -199,8 +183,6 @@ export const translations = {
     schoonmaak: { nl: "Schoonmaak", en: "Cleaning" },
     schoonmaakShort: { nl: "Clean", en: "Clean" },
     td: { nl: "TD (Technische dienst)", en: "TD (Technical Service)" },
-    reserve: { nl: "Reserve", en: "Reserve" },
-    aflosser: { nl: "Aflosser (4 uur)", en: "Relief Worker (4 hrs)" },
   },
 
   // Planning rules
@@ -228,14 +210,42 @@ export const translations = {
       },
     },
     lijnETray: {
-      title: { nl: "Werken met tray", en: "Working with tray" },
+      title: {
+        nl: "Werken met tray of Bjorg Bio-product",
+        en: "Working with tray or Bjorg Bio-product",
+      },
       subtitle: {
         nl: "Inpaklijn • Extra capaciteit",
         en: "Packing line • Extra capacity",
       },
       description: {
-        nl: "Bij werken met tray is 1 extra medewerker nodig op de inpaklijn. Regulier = 5 FTE, met tray = 6 FTE.",
-        en: "When working with tray, 1 extra worker is needed on the packing line. Regular = 5 FTE, with tray = 6 FTE.",
+        nl: "Bij werken met tray of bij een Bjorg Bio-product werkopdracht is 1 extra medewerker nodig op de inpaklijn. Regulier = 5 FTE, met tray/Bjorg = 6 FTE.",
+        en: "When working with tray or with a Bjorg Bio-product work order, 1 extra worker is needed on the packing line. Regular = 5 FTE, with tray/Bjorg = 6 FTE.",
+      },
+    },
+    lijnBMeli: {
+      title: { nl: "Meli werkopdracht", en: "Meli work order" },
+      subtitle: {
+        nl: "Inpaklijn • Extra capaciteit",
+        en: "Packing line • Extra capacity",
+      },
+      description: {
+        nl: "Bij een Meli-werkopdracht is 1 extra medewerker nodig op lijn B. Standaard = 5 FTE, bij Meli = 6 FTE.",
+        en: "For a Meli work order, 1 extra worker is needed on line B. Standard = 5 FTE, with Meli = 6 FTE.",
+      },
+    },
+    lijnCAldenteBakkerJoop: {
+      title: {
+        nl: "Aldente of Bakker Joop werkopdracht",
+        en: "Aldente or Bakker Joop work order",
+      },
+      subtitle: {
+        nl: "Inpaklijn • Extra capaciteit",
+        en: "Packing line • Extra capacity",
+      },
+      description: {
+        nl: "Bij een Aldente- of Bakker Joop-werkopdracht is 1 extra medewerker nodig op lijn C. Standaard = 3 FTE, bij deze orders = 4 FTE.",
+        en: "For an Aldente or Bakker Joop work order, 1 extra worker is needed on line C. Standard = 3 FTE, with these orders = 4 FTE.",
       },
     },
     lijnBMini: {
@@ -256,7 +266,9 @@ export const translations = {
     activeLines: { nl: "Actieve lijnen", en: "Active Lines" },
     conditions: { nl: "Condities", en: "Conditions" },
     stuks8: { nl: "8-stuks", en: "8-piece" },
-    tray: { nl: "Tray", en: "Tray" },
+    tray: { nl: "Tray/Bjorg", en: "Tray/Bjorg" },
+    meli: { nl: "Meli", en: "Meli" },
+    aldenteBakkerJoop: { nl: "Aldente/Bakker Joop", en: "Aldente/Bakker Joop" },
     resultOverview: { nl: "Overzicht resultaat", en: "Result Overview" },
     inpakLine: { nl: "Inpaklijn", en: "Packing Line" },
     bakLine: { nl: "Baklijn", en: "Baking Line" },
@@ -270,6 +282,8 @@ export const translations = {
   planner: {
     title: { nl: "Weekplanner", en: "Week Planner" },
     nextWeek: { nl: "Week", en: "Week" },
+    currentWeekOption: { nl: "Huidige week", en: "Current week" },
+    nextWeekOption: { nl: "Volgende week", en: "Next week" },
     autoFill: { nl: "Auto vullen (blauwprint)", en: "Auto fill (blueprint)" },
     resetWeek: { nl: "Reset week", en: "Reset week" },
     resetShift: { nl: "Reset shift", en: "Reset shift" },
@@ -294,43 +308,30 @@ export const translations = {
     off: { nl: "Uit", en: "Off" },
     a8stuks: { nl: "A: 8-stuks (+1 asst)", en: "A: 8-piece (+1 asst)" },
     bMini: { nl: "B: mini (2 asst)", en: "B: mini (2 asst)" },
-    eTray: { nl: "E: tray (+1 asst)", en: "E: tray (+1 asst)" },
+    bMeli: { nl: "B: Meli (+1 asst)", en: "B: Meli (+1 asst)" },
+    cAldenteBakkerJoop: {
+      nl: "C: Aldente/Bakker Joop (+1 asst)",
+      en: "C: Aldente/Bakker Joop (+1 asst)",
+    },
+    eTray: {
+      nl: "E: tray/Bjorg (+1 asst)",
+      en: "E: tray/Bjorg (+1 asst)",
+    },
     a8stuksShort: { nl: "A • 8-stuks", en: "A • 8-piece" },
     bMiniShort: { nl: "B • mini", en: "B • mini" },
-    eTrayShort: { nl: "E • tray", en: "E • tray" },
+    bMeliShort: { nl: "B • Meli", en: "B • Meli" },
+    cAldenteBakkerJoopShort: {
+      nl: "C • Aldente/BJ",
+      en: "C • Aldente/BJ",
+    },
+    eTrayShort: { nl: "E • tray/Bjorg", en: "E • tray/Bjorg" },
     shiftTotalRow: { nl: "Shift totaal", en: "Shift total" },
     autoFillShift: { nl: "Auto vullen", en: "Auto fill" },
     remarks: { nl: "Opmerkingen", en: "Remarks" },
-    remark3Lines: {
-      nl: "Let op: 2 deegbereider, 1 stroopbereider, 1 aflos en 1 reserve op planning",
-      en: "Note: 2 dough preparers, 1 syrup preparer, 1 relief worker and 1 reserve on schedule",
+    remarkFewerLines: {
+      nl: "Let op: 2 deegbereider en 1 stroopbereider op planning",
+      en: "Note: 2 dough preparers and 1 syrup preparer on schedule",
     },
-    remark2Lines: {
-      nl: "Let op: 2 deegbereider, 1 stroopbereider, geen aflos en geen reserve op planning",
-      en: "Note: 2 dough preparers, 1 syrup preparer, no relief worker and no reserve on schedule",
-    },
-  },
-
-  // Aflos Simulator
-  aflos: {
-    title: { nl: "Aflos Simulatie", en: "Relief Simulation" },
-    timeline: { nl: "Tijdlijn", en: "Timeline" },
-    onLine: { nl: "Op de lijn", en: "On the line" },
-    onBreak: { nl: "Op pauze", en: "On break" },
-    aflosPool: { nl: "Aflos Pool", en: "Relief Pool" },
-    offsite: { nl: "Offsite", en: "Offsite" },
-    otherLines: { nl: "Andere", en: "Other" },
-    pause: { nl: "Pauze", en: "Break" },
-    eigenPauze: { nl: "Eigen pauze", en: "Own break" },
-    nietGearriveerd: { nl: "Niet gearriveerd", en: "Not arrived" },
-    andereLijnen: { nl: "Andere lijnen", en: "Other lines" },
-    beschikbaar: { nl: "Beschikbaar", en: "Available" },
-    round: { nl: "Ronde", en: "Round" },
-    covered: { nl: "gedekt", en: "covered" },
-    uncovered: { nl: "Open", en: "Open" },
-    workers: { nl: "werknemers", en: "workers" },
-    aflosBreak: { nl: "Aflos pauze", en: "Relief break" },
-    otherLinesTime: { nl: "Andere lijnen", en: "Other lines" },
   },
 
   // Footer

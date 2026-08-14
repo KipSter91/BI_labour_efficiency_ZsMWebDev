@@ -27,11 +27,6 @@ export function HeroSection() {
       title: getText(t.heroCards.weekplanner.title),
       description: getText(t.heroCards.weekplanner.description),
     },
-    {
-      id: "pause-aflos",
-      title: getText(t.heroCards.pauzeAflos.title),
-      description: getText(t.heroCards.pauzeAflos.description),
-    },
   ];
 
   function scrollTo(id: string) {
@@ -99,7 +94,7 @@ export function HeroSection() {
           <p className="mb-3 sm:mb-4 text-center text-xs font-bold uppercase tracking-widest text-neutral-400">
             {getText(t.hero.navigatePres)}
           </p>
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
             {cards.map((c, idx) => (
               <motion.button
                 key={c.id}

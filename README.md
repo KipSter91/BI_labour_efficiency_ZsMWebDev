@@ -19,12 +19,6 @@ A modern, responsive Next.js application designed to bridge the gap between theo
 - Interactive B-line variant selector (Mini vs Normaal)
 - Real-time FTE calculations with breakdown by role (Inpak, Operator, Bakoperator)
 
-### ⏱️ Pause-Aflos Simulator
-
-- Visual timeline simulation for break relief system
-- Interactive scheduling for 3 relief workers across 2 production lines
-- Real-time coverage validation
-
 ### 🔧 Technical Conditions Tracker
 
 - Current machine/equipment issues affecting staffing
@@ -97,14 +91,11 @@ src/
 │   ├── TopNav.tsx      # Sticky navigation with logo
 │   ├── HeroSection.tsx # Landing hero with gradient
 │   ├── BlueprintTables.tsx  # Staffing blueprint display
-│   ├── AflosSimulator.tsx   # Break relief simulator
 │   ├── CalculatorPanel.tsx  # FTE calculator
 │   ├── InfoCards.tsx   # Planning conditions cards
 │   ├── Section.tsx     # Reusable section wrapper
 │   └── Footer.tsx      # Site footer
-├── data/
-│   └── aflosSchedule.ts    # Break schedule data
-└── lib/
+lib/
     ├── time.ts         # Time utilities
     └── ui.ts           # UI utilities (cn helper)
 ```
@@ -116,10 +107,6 @@ src/
 | Blueprint Tables                                  | FTE Calculator                                      |
 | ------------------------------------------------- | --------------------------------------------------- |
 | Interactive staffing overview with line selection | Scenario-based planning with real-time calculations |
-
-| Pause-Aflos Simulator        | Planning Conditions              |
-| ---------------------------- | -------------------------------- |
-| Visual break relief timeline | Planning scenarios affecting FTE |
 
 ---
 
